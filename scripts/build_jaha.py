@@ -30,15 +30,26 @@ class StyleSpec:
 
     @property
     def fontforge_weight(self) -> str:
-        return "Normal" if self.name == "Regular" else self.name
+        return {
+            "Regular": "Normal",
+            "Medium": "Medium",
+            "SemiBold": "DemiBold",
+            "Bold": "Bold",
+        }[self.name]
 
     @property
     def stylemap(self) -> int:
-        return 64 if self.name == "Regular" else 32
+        if self.name == "Regular":
+            return 64
+        if self.name == "Bold":
+            return 32
+        return 0
 
 
 STYLE_SPECS = {
     "Regular": StyleSpec("Regular", 400),
+    "Medium": StyleSpec("Medium", 500),
+    "SemiBold": StyleSpec("SemiBold", 600),
     "Bold": StyleSpec("Bold", 700),
 }
 DEFAULT_STYLE = STYLE_SPECS["Regular"]

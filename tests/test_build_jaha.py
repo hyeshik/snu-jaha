@@ -10,6 +10,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 import build_jaha as builder
 import build_ridi_weight as weight_builder
+import instantiate_roboto_serif as roboto_instancer
 
 
 class BuildJahaPolicyTests(unittest.TestCase):
@@ -18,11 +19,15 @@ class BuildJahaPolicyTests(unittest.TestCase):
         self.assertEqual(builder.POSTSCRIPT_NAME, "SNUJaha-Regular")
         self.assertEqual(builder.VERSION, "0.1.0")
         self.assertEqual(builder.STYLE_SPECS["Regular"].weight_class, 400)
+        self.assertEqual(builder.STYLE_SPECS["Medium"].weight_class, 500)
+        self.assertEqual(builder.STYLE_SPECS["SemiBold"].weight_class, 600)
         self.assertEqual(builder.STYLE_SPECS["Bold"].weight_class, 700)
         self.assertEqual(
             builder.STYLE_SPECS["Bold"].postscript_name,
             "SNUJaha-Bold",
         )
+        self.assertEqual(builder.STYLE_SPECS["Medium"].stylemap, 0)
+        self.assertEqual(builder.STYLE_SPECS["SemiBold"].stylemap, 0)
 
     def test_hangul_and_cjk_punctuation_stay_with_ridi(self) -> None:
         for codepoint in (0x1100, 0x3131, 0x3001, 0xAC00, 0xD7A3, 0xFF01):
@@ -65,6 +70,12 @@ class BuildJahaPolicyTests(unittest.TestCase):
             with self.subTest(character=character):
                 self.assertTrue(weight_builder.should_weight(ord(character)))
         self.assertFalse(weight_builder.should_weight(ord("A")))
+
+    def test_intermediate_latin_instances_keep_regular_axes(self) -> None:
+        self.assertEqual(
+            roboto_instancer.AXIS_LOCATIONS,
+            {"GRAD": 0, "opsz": 14, "wdth": 100},
+        )
 
 
 if __name__ == "__main__":

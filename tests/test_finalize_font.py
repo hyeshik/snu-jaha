@@ -16,6 +16,8 @@ class FinalizeFontPolicyTests(unittest.TestCase):
     def test_style_metrics_follow_visible_latin_bounds(self) -> None:
         self.assertEqual(finalizer.STYLE_METRICS["Regular"].cap_height, 654)
         self.assertEqual(finalizer.STYLE_METRICS["Regular"].x_height, 492)
+        self.assertEqual(finalizer.STYLE_METRICS["Medium"].x_height, 492)
+        self.assertEqual(finalizer.STYLE_METRICS["SemiBold"].x_height, 493)
         self.assertEqual(finalizer.STYLE_METRICS["Bold"].cap_height, 654)
         self.assertEqual(finalizer.STYLE_METRICS["Bold"].x_height, 494)
 

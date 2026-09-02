@@ -32,6 +32,7 @@ cp "$RIDI_ARCHIVE" "$RIDI_DIR/RIDIBatang.otf"
 unzip -j -o "$ROBOTO_ARCHIVE" \
     ttf/RobotoSerif14pt-Regular.ttf \
     ttf/RobotoSerif14pt-SemiBold.ttf \
+    'variable/RobotoSerif\[GRAD,opsz,wdth,wght\].ttf' \
     -d "$ROBOTO_DIR"
 
 echo "Sources are ready."
