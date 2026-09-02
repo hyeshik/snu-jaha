@@ -55,3 +55,202 @@ that expansion: its four stages are distinguishable at 9–25 pt, while another
 synthetic Hangul step would put additional pressure on the counters of `흙`,
 `뿔`, and `률`. The stronger scheme remains a future display-weight option, not
 the current text-family Bold.
+
+## Light and Thin acceptance criteria
+
+Light and Thin require negative synthetic weighting of the RIDIBatang source.
+This is a different risk class from the positive Medium-to-Bold steps: fine
+strokes, serif joins, and dots can split or disappear. A candidate succeeds
+only when it passes every hard gate below and then passes the quantitative and
+visual targets. Matching a nominal weight number alone is not sufficient.
+
+### Intended roles
+
+- Light 300: secondary text, introductions, captions, and restrained display;
+  it must remain usable at 10–11 pt in print-oriented layouts.
+- Thin 100: titles and large display at 18 pt or larger. Its 9–11 pt rendering
+  is diagnostic, not a promise of body-text suitability.
+
+The two styles must be visibly distinct from each other and from Regular in
+their intended size ranges. Thin that works only at 32 pt or larger is too
+fragile for this family.
+
+### Outline hard gates
+
+1. Preserve all 11,172 modern Hangul mappings and leave no newly empty encoded
+   CJK, context-symbol, or default-figure glyph.
+2. Introduce no new FontForge validation bits relative to the corresponding
+   Regular build and remain loadable as OpenType/CFF by fontTools, FreeType,
+   and Typst.
+3. At 64 ppem, no audited glyph may gain a connected raster component relative
+   to Regular. An increased component count is treated as a split stroke or
+   serif until visual inspection proves otherwise.
+4. Preserve every essential dot, diagonal, serif, and junction in the sparse
+   sentinels `느 스 그 노 누 니 시 소 기 가 나 사` and the dense sentinels
+   `뾂 뼒 뼮 뿳 휇 흙 뿔 률 쫓 빛 활 괄`.
+5. Reject needle-like serif ends, flattened bowls, visibly pinched joins, and
+   accidental sharp corners even if the glyph remains technically connected.
+
+The Regular Hangul baseline contains ink areas from 127,913 to 382,517 square
+font units, with a median of 279,450. The sparse and dense sentinels above come
+from those extremes and supplement the more familiar proof words.
+
+### Weight and mixed-script targets
+
+All area ratios are measured against the final SNU Jaha Regular outlines after
+the common Latin geometry transform.
+
+| Measure | Light target | Thin target |
+|---|---:|---:|
+| Median Hangul ink-area ratio | 0.88–0.93 | 0.68–0.76 |
+| Median Latin ink-area ratio | 0.88–0.93 | 0.68–0.76 |
+| Hangul/Latin median-ratio difference | ≤ 0.04 | ≤ 0.05 |
+| Minimum adjacent-family area separation | 0.06 from Regular | 0.12 from Light |
+
+Roboto Serif at `wght` 333.333 and 200 provides initial Latin medians of about
+0.917 and 0.727 on `H M A I N o x n g p`. These are reference points, not
+preselected answers. RIDIBatang offsets must be selected by the same final-font
+measurements rather than assumed from the positive-weight curve.
+
+Across the full encoded set, ink area must be nondecreasing
+(`Thin ≤ Light ≤ Regular`). Audited letters and default figures must be
+strictly ordered; equality is allowed only for intentionally weight-invariant
+symbols. The first-percentile Hangul ratio must remain at least 0.80 for Light
+and 0.55 for Thin; a lower outlier triggers glyph-level inspection even when
+the median passes.
+
+### Geometry and spacing gates
+
+- Preserve every Hangul advance exactly and keep default `0–9` advances at 560
+  units in both styles.
+- Keep digit-to-digit kerning at zero. Repeated-figure spacing must be repaired
+  inside the common tabular cell, not with pair positioning.
+- Target an outline `00` gap of `78 ± 3` units for Light and `90 ± 5` units for
+  Thin, continuing outward from Regular's 72-unit gap.
+- Keep the Latin baseline transform unchanged. Visible cap and x-height tops
+  may differ from Regular by at most 2 units after rounding.
+- Preserve all current GSUB/GPOS features and recheck dash-to-figure spacing in
+  each new style.
+- Set OpenType classes to Light 300 and Thin 100. Both styles use neither the
+  Regular nor Bold legacy style bit, and both use `macStyle == 0`.
+
+### Raster and specimen gates
+
+The proof must include vector and unhinted grayscale raster comparisons at 96,
+144, and 300 dpi.
+
+- Light: mandatory checks at 9, 10, 11, 14, and 24 pt; it must have continuous
+  essential strokes at 10–11 pt and an even paragraph color at 11 pt.
+- Thin: diagnostic checks at 9, 11, and 14 pt, plus mandatory checks at 18,
+  24, and 36 pt; it must be structurally complete and visibly intentional from
+  18 pt upward.
+- Both: compare Korean-only, Latin-only, mixed Korean/Latin, tabular figures,
+  scientific units, punctuation, and the sparse/dense sentinel sets.
+- A mixed run must not make either script look more than one weight step darker
+  than the other. Two reviewers should be able to order `Thin–Light–Regular`
+  correctly without seeing the labels.
+
+### Candidate search, before full builds
+
+Start with representative-glyph microproofs rather than thinning all CJK
+glyphs immediately:
+
+- Light: RIDIBatang offsets `-6`, `-8`, and `-10`; Roboto source weights in the
+  `320–350` range.
+- Thin: RIDIBatang offsets `-16`, `-20`, and `-24`; Roboto source weights in the
+  `180–230` range.
+- Compare at least FontForge's current `auto` and `squish` counter behavior.
+
+Only the best Light and Thin construction candidates proceed to full-font
+builds, the all-glyph monotonicity scan, and the final specimen. If none passes
+the hard gates, the correct result is to omit that style rather than publish a
+damaged synthetic weight.
+
+### Stage 1 microfont result
+
+The representative-glyph search built 12 CJK microfonts across all planned
+offset/counter combinations and six transformed Roboto Serif instances. The
+following `auto` results determine the shortlist; area and gap values are
+measured against the final SNU Jaha Regular.
+
+| CJK candidate | Median area | First percentile | `00` gap | Result |
+|---|---:|---:|---:|---|
+| Light −6 | 0.913 | 0.907 | 77.3 | promote |
+| Light −8 | 0.885 | 0.875 | 79.2 | viable alternate |
+| Light −10 | 0.856 | 0.844 | 81.1 | too light; gap high |
+| Thin −16 | 0.770 | 0.751 | 87.0 | too dark |
+| Thin −20 | 0.713 | 0.691 | 91.1 | promote |
+| Thin −24 | 0.656 | 0.629 | 95.4 | too light; gap high |
+
+`squish` produced the same audited Hangul area as `auto`, but held the `00`
+gap near 70–71 units in every candidate. It therefore loses without providing
+a measured outline-integrity advantage. Full builds will use `auto`.
+
+| Roboto source | Median Latin area | Result |
+|---|---:|---|
+| Light 320 | 0.899 | pass |
+| Light 333.333 | 0.915 | promote |
+| Light 350 | 0.940 | too dark |
+| Thin 180 | 0.700 | pass |
+| Thin 200 | 0.726 | promote |
+| Thin 230 | 0.771 | too dark |
+
+Every negative CJK candidate increases the 64 ppem component count of `뿳`
+from five to six and `휇` from six to seven. Enlarged vector outlines and binary
+rasters show the same transition even at the smallest offset: a contact between
+independent jamo strokes in the Regular raster opens into whitespace. No
+within-stroke break or glyph loss occurs. These two exact `+1` transitions are
+therefore recorded as reviewed exceptions; a larger increase or the same
+change in any other glyph remains a hard failure.
+
+Stage 1 promotes RIDIBatang `−6 auto` with Roboto Serif `wght 333.333` for
+Light, and RIDIBatang `−20 auto` with Roboto Serif `wght 200` for Thin. The
+Light pair has only a 0.002 script-to-script median difference and preserves a
+0.087 separation from Regular. The Thin pair differs by 0.013 and retains the
+conservative Roboto coordinate predicted by the existing family mapping.
+Light `−8 / 320` remains a viable alternate if the full paragraph proof shows
+that the promoted Light is too close to Regular, but it does not proceed as a
+parallel construction path.
+
+## Stage 2 full-font result
+
+The promoted constructions were applied to all RIDIBatang glyphs retained in
+SNU Jaha and merged with their corresponding transformed Roboto Serif
+instances. Both outputs contain 12,999 glyphs and 12,656 encoded characters,
+including all 11,172 modern Hangul syllables.
+
+| Style | RIDI construction | Roboto `wght` | Hangul median | Hangul p1 | `00` gap |
+|---|---:|---:|---:|---:|---:|
+| Thin 100 | −20 auto | 200 | 0.704 | 0.684 | 92 |
+| Light 300 | −6 auto | 333.333 | 0.911 | 0.904 | 78 |
+| Regular 400 | source | 400 | 1.000 | 1.000 | 72 |
+
+The complete encoded audit found no missing or newly empty glyph, no CJK or
+figure advance mismatch, no sentinel ordering failure, and no 256 ppem raster
+ink-order violation. The full Hangul ratio ranges are 0.667–0.740 for Thin and
+0.901–0.923 for Light. These tighter full-set distributions confirm that the
+representative glyphs did not hide an unusually weak or dark Hangul class.
+
+Fourteen Latin composite or overlapping-contour glyphs produce misleading
+signed vector-area totals because the static Regular and variable instances
+encode their overlaps differently. All fourteen pass the union-aware 256 ppem
+raster comparison; they are retained as review records rather than failures.
+The hard sentinels remain strictly ordered in vector area.
+
+The reviewed `뿳` and `휇` component separations are unchanged in the full
+fonts, and no other audited glyph gains a raster component. Thin initially
+created one overlapped CFF stem hint in `쀻`; the negative-weight build now
+recalculates only glyphs carrying that FontForge validation bit after export.
+The repaired Thin source and merged Thin font have the same validation mask as
+their corresponding Light/Regular stages.
+
+The six-style family is therefore:
+
+| Style | Role |
+|---|---|
+| Thin 100 | display from 18 pt; 9–14 pt remains diagnostic |
+| Light 300 | introductions, captions, and secondary text from 10–11 pt |
+| Regular 400 | continuous reading |
+| Medium 500 | restrained inline emphasis |
+| SemiBold 600 | section headings and key results |
+| Bold 700 | document titles and strong hierarchy |

@@ -31,6 +31,8 @@ class StyleSpec:
     @property
     def fontforge_weight(self) -> str:
         return {
+            "Thin": "Thin",
+            "Light": "Light",
             "Regular": "Normal",
             "Medium": "Medium",
             "SemiBold": "DemiBold",
@@ -47,6 +49,8 @@ class StyleSpec:
 
 
 STYLE_SPECS = {
+    "Thin": StyleSpec("Thin", 100),
+    "Light": StyleSpec("Light", 300),
     "Regular": StyleSpec("Regular", 400),
     "Medium": StyleSpec("Medium", 500),
     "SemiBold": StyleSpec("SemiBold", 600),

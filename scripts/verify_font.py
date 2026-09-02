@@ -49,6 +49,34 @@ class StyleProfile:
 
 
 STYLE_PROFILES = {
+    "Thin": StyleProfile(
+        weight_class=100,
+        postscript_name="SNUJaha-Thin",
+        fs_selection=0,
+        mac_style=0,
+        cap_height=654,
+        x_height=492,
+        reference_advances={"H": 729, "M": 840, "g": 557, "n": 585},
+        figure_bounds={
+            "0": (46, -11, 514, 663),
+            "3": (87, -11, 493, 663),
+            "8": (60, -15, 500, 667),
+        },
+    ),
+    "Light": StyleProfile(
+        weight_class=300,
+        postscript_name="SNUJaha-Light",
+        fs_selection=0,
+        mac_style=0,
+        cap_height=654,
+        x_height=492,
+        reference_advances={"H": 752, "M": 864, "g": 563, "n": 598},
+        figure_bounds={
+            "0": (39, -18, 521, 670),
+            "3": (79, -18, 501, 670),
+            "8": (53, -22, 507, 674),
+        },
+    ),
     "Regular": StyleProfile(
         weight_class=400,
         postscript_name="SNUJaha-Regular",

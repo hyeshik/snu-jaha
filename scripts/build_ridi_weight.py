@@ -13,12 +13,39 @@ from build_jaha import (
 
 DEFAULT_FIGURES = "0123456789"
 DEFAULT_FIGURE_X_SCALE = 0.944
+OVERLAPPED_HINTS = 0x800000
 
 
 def should_weight(codepoint: int) -> bool:
     return should_keep_ridi_codepoint(codepoint) or (
         codepoint >= 0 and chr(codepoint) in DEFAULT_FIGURES
     )
+
+
+def repair_overlapped_hints(output: Path, quiet: bool) -> tuple[int, int]:
+    import fontforge
+
+    repaired_output = output.with_name(f"{output.stem}.rehinted{output.suffix}")
+    with suppress_c_stderr(quiet):
+        font = fontforge.open(str(output))
+    repaired = 0
+    try:
+        font.reencode("unicode")
+        with suppress_c_stderr(quiet):
+            for glyph in font.glyphs():
+                if glyph.validate(1) & OVERLAPPED_HINTS:
+                    glyph.autoHint()
+                    repaired += 1
+            validation = font.validate(1)
+            if repaired:
+                font.generate(str(repaired_output), flags=("opentype",))
+    finally:
+        font.close()
+    if repaired:
+        repaired_output.replace(output)
+    else:
+        repaired_output.unlink(missing_ok=True)
+    return repaired, validation
 
 
 def build(
@@ -83,10 +110,14 @@ def build(
     finally:
         font.close()
 
+    repaired_hints = 0
+    if offset < 0:
+        repaired_hints, validation = repair_overlapped_hints(output, quiet)
     print(
         f"{output}: cid_flattened={flattened}, weighted={changed}, "
         f"advance_preserved={recentered}, "
         f"figures_x_scaled={figures_scaled}, "
+        f"overlapped_hints_repaired={repaired_hints}, "
         f"figure_x_scale={figure_x_scale:.3f}, "
         f"offset={offset}, validate=0x{validation:x}"
     )

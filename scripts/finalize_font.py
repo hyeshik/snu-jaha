@@ -40,6 +40,14 @@ class StyleMetrics:
 
 
 STYLE_METRICS = {
+    "Thin": StyleMetrics(
+        cap_height=654,
+        x_height=492,
+    ),
+    "Light": StyleMetrics(
+        cap_height=654,
+        x_height=492,
+    ),
     "Regular": StyleMetrics(
         cap_height=654,
         x_height=492,
