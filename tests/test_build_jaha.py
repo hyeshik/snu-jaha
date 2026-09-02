@@ -11,6 +11,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import build_jaha as builder
 import build_ridi_weight as weight_builder
 import build_lightweight_microfonts as lightweight_builder
+import build_extrabold_microfonts as extrabold_builder
 import audit_lightweight_candidates as lightweight_audit
 import instantiate_roboto_serif as roboto_instancer
 
@@ -26,6 +27,8 @@ class BuildJahaPolicyTests(unittest.TestCase):
         self.assertEqual(builder.STYLE_SPECS["Medium"].weight_class, 500)
         self.assertEqual(builder.STYLE_SPECS["SemiBold"].weight_class, 600)
         self.assertEqual(builder.STYLE_SPECS["Bold"].weight_class, 700)
+        self.assertEqual(builder.STYLE_SPECS["ExtraBold"].weight_class, 800)
+        self.assertEqual(builder.STYLE_SPECS["ExtraBold"].fontforge_weight, "Heavy")
         self.assertEqual(
             builder.STYLE_SPECS["Bold"].postscript_name,
             "SNUJaha-Bold",
@@ -34,6 +37,7 @@ class BuildJahaPolicyTests(unittest.TestCase):
         self.assertEqual(builder.STYLE_SPECS["SemiBold"].stylemap, 0)
         self.assertEqual(builder.STYLE_SPECS["Thin"].stylemap, 0)
         self.assertEqual(builder.STYLE_SPECS["Light"].stylemap, 0)
+        self.assertEqual(builder.STYLE_SPECS["ExtraBold"].stylemap, 0)
 
     def test_hangul_and_cjk_punctuation_stay_with_ridi(self) -> None:
         for codepoint in (0x1100, 0x3131, 0x3001, 0xAC00, 0xD7A3, 0xFF01):
@@ -114,6 +118,44 @@ class BuildJahaPolicyTests(unittest.TestCase):
         self.assertAlmostEqual(
             candidates[("Thin", -24)].figure_x_scale,
             1.056,
+        )
+
+    def test_extrabold_microfont_matrix_covers_search_space(self) -> None:
+        candidates = extrabold_builder.EXTRABOLD_CANDIDATES
+        self.assertEqual(len(candidates), 12)
+        self.assertEqual(
+            {
+                (
+                    candidate.offset,
+                    candidate.method,
+                    candidate.weight_type,
+                    candidate.counter,
+                )
+                for candidate in candidates
+            },
+            {
+                (offset, method, weight_type, counter)
+                for offset in (28, 30, 32, 36)
+                for method, weight_type, counter in (
+                    ("auto", "auto", "auto"),
+                    ("retain", "auto", "retain"),
+                    ("cjk", "CJK", "auto"),
+                )
+            },
+        )
+
+    def test_extrabold_figure_correction_extends_weight_curve(self) -> None:
+        candidates = {
+            (candidate.offset, candidate.method): candidate
+            for candidate in extrabold_builder.EXTRABOLD_CANDIDATES
+        }
+        self.assertAlmostEqual(
+            candidates[(32, "auto")].figure_x_scale,
+            0.9253333333333333,
+        )
+        self.assertAlmostEqual(
+            candidates[(36, "auto")].figure_x_scale,
+            0.916,
         )
 
     def test_only_reviewed_jamo_separations_are_exempted(self) -> None:

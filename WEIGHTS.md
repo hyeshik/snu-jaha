@@ -244,7 +244,7 @@ recalculates only glyphs carrying that FontForge validation bit after export.
 The repaired Thin source and merged Thin font have the same validation mask as
 their corresponding Light/Regular stages.
 
-The six-style family is therefore:
+Before the ExtraBold study, the six-style family was:
 
 | Style | Role |
 |---|---|
@@ -254,3 +254,129 @@ The six-style family is therefore:
 | Medium 500 | restrained inline emphasis |
 | SemiBold 600 | section headings and key results |
 | Bold 700 | document titles and strong hierarchy |
+
+## ExtraBold development
+
+ExtraBold is treated as a new display style above the approved Bold, not as a
+reason to relabel the existing family. Serif weight cannot be extended by
+outline growth alone: the principal risk is that independent jamo strokes join
+and enclosed counters collapse before the style becomes sufficiently distinct.
+
+### Stage 1 alternatives
+
+The representative search evaluates four RIDIBatang offsets (`+28`, `+30`,
+`+32`, and `+36`) with three FontForge constructions:
+
+- `auto`: extend the same weight and counter behavior used through Bold;
+- `retain`: use automatic stroke classification while asking FontForge to
+  retain counters;
+- `CJK`: use CJK stroke classification with automatic counters.
+
+Roboto Serif is independently sampled at `wght 610`, `620`, `633.333`, `650`,
+and `666.667`. A further custom construction remains available only if the
+direct candidates fail: use direction-dependent outline growth or protect the
+specific jamo counters that close early. That path requires explicit glyph
+rules and is not introduced as a fallback in the normal build.
+
+### Promotion gates
+
+A CJK microfont can proceed to a full build only when all audited glyphs retain
+their mappings and advances, remain strictly heavier than Bold, and meet these
+targets:
+
+| Measure | ExtraBold target |
+|---|---:|
+| Median Hangul ink-area ratio vs Regular | 1.44–1.54 |
+| Median separation from Bold | 0.08–0.16 |
+| Hangul p99–p1 ratio spread | ≤ 0.10 |
+| Outline `00` gap | 45–51 units |
+| Hangul/Latin median-ratio difference | ≤ 0.05 |
+| Enclosed counter area at 64 ppem | ≥ 70% of Bold |
+
+The initial hard topology gate records every foreground-component merge and
+enclosed-counter loss relative to Bold at 24, 32, 48, and 64 ppem. Positive
+weight can legitimately join two independent jamo strokes, so a recorded merge
+may be accepted only after enlarged vector and exact binary-raster review. An
+enclosed counter that disappears at 64 ppem is not reviewable and rejects the
+candidate. The intended minimum size must be decided from the 24 and 32 ppem
+evidence before promotion; a candidate that works only above 24 pt is a display
+style and must be documented as such.
+
+The Latin candidate must have a median ratio of 1.47–1.56, remain 0.06–0.14
+above Bold, and retain the common baseline, cap-height, and x-height geometry
+within two font units. Full-font promotion would then repeat the encoded glyph,
+advance, monotonicity, CFF validation, feature, dash-to-figure, and multi-DPI
+specimen checks already used for the other styles.
+
+### Stage 1 result
+
+All 12 CJK microfonts preserved the representative mappings and advances and
+were strictly heavier than Bold. None passed the initial topology gate without
+review. The useful numerical shortlist is:
+
+| Candidate | Hangul median | Separation from Bold | `00` gap | Merge / counter records |
+|---|---:|---:|---:|---:|
+| `+30 auto` | 1.440 | 0.088 | 50.4 | 32 / 2 |
+| `+30 retain` | 1.493 | 0.142 | 50.4 | 36 / 2 |
+| `+32 auto` | 1.470 | 0.118 | 49.2 | 43 / 2 |
+| `+32 retain` | 1.527 | 0.175 | 49.2 | 45 / 1 |
+
+The `CJK` method produces the same audited Hangul areas as `auto` but leaves
+the repeated-figure gap at 77.7–80.0 units, so it provides no advantage and is
+eliminated. Roboto Serif `wght 633.333` is the only Latin sample that passes all
+numeric gates, with a 1.498 median and 0.071 separation from Bold.
+
+The closest mixed-script color is therefore RIDIBatang `+30 retain` with
+Roboto Serif `wght 633.333`: their median ratios differ by 0.005. Its two
+counter-loss records are `뼒` at 24 ppem and `뺄` at 32 ppem; neither counter is
+lost at 64 ppem, but seven representative foreground joins remain there.
+RIDIBatang `+32 auto` with the same Latin source is the construction-consistent
+alternate; it differs by 0.028 in mixed-script color and records nine joins at
+64 ppem.
+
+The five-page microproof presents the offset ladder, method comparison, exact
+binary rasters, and mixed-script finalists. Visual review accepted `+30 retain`
+as the best balance: its joins are consistent with a display ExtraBold rather
+than damaged letterforms, and the small raster counter records do not erase
+glyph identity. That review promotes only this construction to Stage 2.
+
+### Stage 2 full-font result
+
+The approved construction starts again from RIDIBatang Regular, applies `+30`
+with `retain` counter behavior to all 11,805 eligible source glyphs, recenters
+every changed outline in its original advance, and applies a 0.93 horizontal
+correction to the default figures. It is merged with the transformed Roboto
+Serif `wght 633.333` instance and published as ExtraBold 800.
+
+| Measure | Full ExtraBold result |
+|---|---:|
+| Encoded characters | 12,656 |
+| Modern Hangul | 11,172 |
+| Median Hangul area / Regular | 1.509 |
+| Hangul p1–p99 | 1.461–1.551 |
+| Median Hangul separation from Bold | 0.147 |
+| Median Latin area / Regular | 1.498 |
+| Median Latin separation from Bold | 0.071 |
+| Hangul/Latin median difference | 0.011 |
+| `00` gap | 50 units |
+
+The complete audit found no cmap difference, newly empty CJK glyph, CJK or
+figure advance mismatch, vector-area reversal, or 64 ppem raster-ink reversal
+between Bold and ExtraBold. Every modern Hangul syllable is strictly darker in
+both vector area and 64 ppem raster ink. The generated CFF and merged font retain
+the same validation masks as the corresponding accepted family stages.
+
+The full-font rounding adds one small-size counter record (`뾂` at 48 ppem) to
+the two Stage 1 records (`뼒` at 24 ppem and `뺄` at 32 ppem); none loses a
+counter at 64 ppem. At 64 ppem, `뼮` retains all counters but their combined
+area is 69.2% of Bold rather than the nominal 70% gate. This one-pixel boundary
+case is accepted as the reviewed exception already visible in the microproof;
+lower ratios or any 64 ppem counter disappearance remain failures.
+
+ExtraBold is intended for primary titles, covers, and high-impact numeric
+results from 18 pt upward. Its 10–14 pt rows remain diagnostic and do not make
+it a body-text weight. The completed seven-style family adds:
+
+| Style | Role |
+|---|---|
+| ExtraBold 800 | strong display titles and key figures from 18 pt |

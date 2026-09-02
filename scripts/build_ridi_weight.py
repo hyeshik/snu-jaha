@@ -53,6 +53,7 @@ def build(
     output: Path,
     offset: int,
     figure_x_scale: float,
+    counter: str,
     quiet: bool,
 ) -> None:
     try:
@@ -80,7 +81,7 @@ def build(
                 original_width = glyph.width
                 original_bounds = glyph.boundingBox()
                 original_center = (original_bounds[0] + original_bounds[2]) / 2
-                glyph.changeWeight(offset, "auto", 0, 0, "auto")
+                glyph.changeWeight(offset, "auto", 0, 0, counter)
                 if glyph.width != original_width:
                     weighted_bounds = glyph.boundingBox()
                     weighted_center = (weighted_bounds[0] + weighted_bounds[2]) / 2
@@ -119,7 +120,7 @@ def build(
         f"figures_x_scaled={figures_scaled}, "
         f"overlapped_hints_repaired={repaired_hints}, "
         f"figure_x_scale={figure_x_scale:.3f}, "
-        f"offset={offset}, validate=0x{validation:x}"
+        f"offset={offset}, counter={counter}, validate=0x{validation:x}"
     )
 
 
@@ -135,6 +136,11 @@ def main() -> None:
         type=float,
         default=DEFAULT_FIGURE_X_SCALE,
     )
+    parser.add_argument(
+        "--counter",
+        choices=("auto", "retain"),
+        default="auto",
+    )
     parser.add_argument("--verbose-fontforge", action="store_true")
     args = parser.parse_args()
     build(
@@ -142,6 +148,7 @@ def main() -> None:
         Path(args.output),
         args.offset,
         args.figure_x_scale,
+        args.counter,
         quiet=not args.verbose_fontforge,
     )
 

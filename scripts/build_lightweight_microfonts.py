@@ -82,7 +82,12 @@ def rewrite_audit_metadata(font, family: str, postscript_name: str) -> None:
     )
 
 
-def make_ridi_subset(source: Path, output: Path, quiet: bool) -> None:
+def make_ridi_subset(
+    source: Path,
+    output: Path,
+    quiet: bool,
+    audit_codepoints: set[int] = AUDIT_CODEPOINTS,
+) -> None:
     import fontforge
 
     with suppress_c_stderr(quiet):
@@ -92,7 +97,7 @@ def make_ridi_subset(source: Path, output: Path, quiet: bool) -> None:
         font.reencode("unicode")
         remove_layout_lookups(font)
         for glyph in list(font.glyphs()):
-            if glyph.glyphname == ".notdef" or glyph.unicode in AUDIT_CODEPOINTS:
+            if glyph.glyphname == ".notdef" or glyph.unicode in audit_codepoints:
                 continue
             font.removeGlyph(glyph)
         rewrite_audit_metadata(

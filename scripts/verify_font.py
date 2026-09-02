@@ -133,6 +133,20 @@ STYLE_PROFILES = {
             "8": (40, -25, 520, 677),
         },
     ),
+    "ExtraBold": StyleProfile(
+        weight_class=800,
+        postscript_name="SNUJaha-ExtraBold",
+        fs_selection=0,
+        mac_style=0,
+        cap_height=654,
+        x_height=494,
+        reference_advances={"H": 757, "M": 889, "g": 598, "n": 626},
+        figure_bounds={
+            "0": (25, -21, 535, 673),
+            "3": (63, -21, 517, 673),
+            "8": (38, -25, 522, 677),
+        },
+    ),
 }
 
 

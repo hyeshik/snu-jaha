@@ -18,9 +18,12 @@ SEMIBOLD_OUTPUT := $(DIST_DIR)/SNUJaha-SemiBold.otf
 SEMIBOLD_RAW_OUTPUT := $(BUILD_DIR)/SNUJaha-SemiBold.raw.otf
 BOLD_OUTPUT := $(DIST_DIR)/SNUJaha-Bold.otf
 BOLD_RAW_OUTPUT := $(BUILD_DIR)/SNUJaha-Bold.raw.otf
+EXTRABOLD_OUTPUT := $(DIST_DIR)/SNUJaha-ExtraBold.otf
+EXTRABOLD_RAW_OUTPUT := $(BUILD_DIR)/SNUJaha-ExtraBold.raw.otf
 RIDI_MEDIUM_SOURCE := $(BUILD_DIR)/RIDIBatang-Medium-8.otf
 RIDI_SEMIBOLD_SOURCE := $(BUILD_DIR)/RIDIBatang-SemiBold-16.otf
 RIDI_BOLD_SOURCE := $(BUILD_DIR)/RIDIBatang-Bold-24.otf
+RIDI_EXTRABOLD_SOURCE := $(BUILD_DIR)/RIDIBatang-ExtraBold-30-retain.otf
 RIDI_THIN_SOURCE := $(BUILD_DIR)/RIDIBatang-Thin-20.otf
 RIDI_LIGHT_SOURCE := $(BUILD_DIR)/RIDIBatang-Light-6.otf
 ROBOTO_VARIABLE_SOURCE := sources/roboto-serif/RobotoSerif[GRAD,opsz,wdth,wght].ttf
@@ -28,6 +31,7 @@ ROBOTO_THIN_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Weight200.ttf
 ROBOTO_LIGHT_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Weight333.ttf
 ROBOTO_MEDIUM_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Weight467.ttf
 ROBOTO_SEMIBOLD_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Weight533.ttf
+ROBOTO_EXTRABOLD_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Weight633.ttf
 SPECIMEN := $(PROOF_DIR)/SNUJaha-Regular-Specimen.pdf
 MIXED_TEXT_PROOF := $(PROOF_DIR)/SNUJaha-Regular-Mixed-Text-Proof.pdf
 BOLD_SPECIMEN := $(PROOF_DIR)/SNUJaha-Bold-Candidate-Specimen.pdf
@@ -37,8 +41,12 @@ LIGHTWEIGHT_AUDIT := $(LIGHTWEIGHT_AUDIT_DIR)/audit.json
 LIGHTWEIGHT_SPECIMEN := $(PROOF_DIR)/SNUJaha-Light-Thin-Microproof.pdf
 FULL_WEIGHT_AUDIT := $(BUILD_DIR)/full-weight-audit.json
 FULL_WEIGHT_SPECIMEN := $(PROOF_DIR)/SNUJaha-Full-Weight-Range-Specimen.pdf
+EXTRABOLD_AUDIT_DIR := $(BUILD_DIR)/extrabold-audit
+EXTRABOLD_AUDIT := $(EXTRABOLD_AUDIT_DIR)/audit.json
+EXTRABOLD_SPECIMEN := $(PROOF_DIR)/SNUJaha-ExtraBold-Microproof.pdf
+EXTRABOLD_FULL_AUDIT := $(BUILD_DIR)/extrabold-full-audit.json
 
-.PHONY: all sources build thin-build light-build medium-build semibold-build bold-build full-build verify thin-verify light-verify medium-verify semibold-verify bold-verify verify-all weight-range-audit specimen bold-specimen weight-specimen lightweight-audit family-specimen mixed-text-proof test clean
+.PHONY: all sources build thin-build light-build medium-build semibold-build bold-build extrabold-build full-build verify thin-verify light-verify medium-verify semibold-verify bold-verify extrabold-verify verify-all weight-range-audit extrabold-full-audit specimen bold-specimen weight-specimen lightweight-audit extrabold-audit family-specimen mixed-text-proof test clean
 
 all: specimen
 
@@ -176,7 +184,32 @@ bold-build: sources
 		--style Bold
 	$(PYTHON) scripts/verify_font.py "$(BOLD_OUTPUT)"
 
-full-build: thin-build light-build build medium-build semibold-build bold-build
+extrabold-build: sources
+	mkdir -p "$(BUILD_DIR)" "$(DIST_DIR)"
+	$(PYTHON) scripts/instantiate_roboto_serif.py \
+		--input '$(ROBOTO_VARIABLE_SOURCE)' \
+		--output "$(ROBOTO_EXTRABOLD_SOURCE)" \
+		--weight 633.333
+	$(FONTFORGE) -lang=py -script scripts/build_ridi_weight.py \
+		--input sources/ridibatang/RIDIBatang.otf \
+		--output "$(RIDI_EXTRABOLD_SOURCE)" \
+		--offset 30 \
+		--counter retain \
+		--figure-x-scale 0.93
+	$(FONTFORGE) -lang=py -script scripts/build_jaha.py \
+		--ridibatang "$(RIDI_EXTRABOLD_SOURCE)" \
+		--roboto-serif "$(ROBOTO_EXTRABOLD_SOURCE)" \
+		--output "$(EXTRABOLD_RAW_OUTPUT)" \
+		--style ExtraBold
+	$(PYTHON) scripts/finalize_font.py \
+		--input "$(EXTRABOLD_RAW_OUTPUT)" \
+		--ridibatang "$(RIDI_EXTRABOLD_SOURCE)" \
+		--output "$(EXTRABOLD_OUTPUT)" \
+		--kern-scale 0.895 \
+		--style ExtraBold
+	$(PYTHON) scripts/verify_font.py "$(EXTRABOLD_OUTPUT)"
+
+full-build: thin-build light-build build medium-build semibold-build bold-build extrabold-build
 
 verify:
 	$(PYTHON) scripts/verify_font.py "$(OUTPUT)"
@@ -196,7 +229,10 @@ semibold-verify:
 bold-verify:
 	$(PYTHON) scripts/verify_font.py "$(BOLD_OUTPUT)"
 
-verify-all: thin-verify light-verify verify medium-verify semibold-verify bold-verify
+extrabold-verify:
+	$(PYTHON) scripts/verify_font.py "$(EXTRABOLD_OUTPUT)"
+
+verify-all: thin-verify light-verify verify medium-verify semibold-verify bold-verify extrabold-verify
 
 weight-range-audit: thin-build light-build build
 	$(PYTHON) scripts/audit_weight_range.py \
@@ -204,6 +240,13 @@ weight-range-audit: thin-build light-build build
 		--light "$(LIGHT_OUTPUT)" \
 		--regular "$(OUTPUT)" \
 		--output "$(FULL_WEIGHT_AUDIT)"
+
+extrabold-full-audit: build bold-build extrabold-build
+	$(PYTHON) scripts/audit_extrabold_full.py \
+		--regular "$(OUTPUT)" \
+		--bold "$(BOLD_OUTPUT)" \
+		--extrabold "$(EXTRABOLD_OUTPUT)" \
+		--output "$(EXTRABOLD_FULL_AUDIT)"
 
 specimen: build
 	mkdir -p "$(PROOF_DIR)"
@@ -252,18 +295,52 @@ lightweight-audit: build
 		--font-path "$(LIGHTWEIGHT_AUDIT_DIR)" \
 		specimen/lightweight-microproof.typ "$(LIGHTWEIGHT_SPECIMEN)"
 
-family-specimen: full-build weight-range-audit
+extrabold-audit: build bold-build
+	mkdir -p "$(EXTRABOLD_AUDIT_DIR)" "$(PROOF_DIR)"
+	$(PYTHON) scripts/instantiate_roboto_serif.py --input '$(ROBOTO_VARIABLE_SOURCE)' --output "$(EXTRABOLD_AUDIT_DIR)/Roboto-W610.ttf" --weight 610
+	$(PYTHON) scripts/instantiate_roboto_serif.py --input '$(ROBOTO_VARIABLE_SOURCE)' --output "$(EXTRABOLD_AUDIT_DIR)/Roboto-W620.ttf" --weight 620
+	$(PYTHON) scripts/instantiate_roboto_serif.py --input '$(ROBOTO_VARIABLE_SOURCE)' --output "$(EXTRABOLD_AUDIT_DIR)/Roboto-W633.ttf" --weight 633.333
+	$(PYTHON) scripts/instantiate_roboto_serif.py --input '$(ROBOTO_VARIABLE_SOURCE)' --output "$(EXTRABOLD_AUDIT_DIR)/Roboto-W650.ttf" --weight 650
+	$(PYTHON) scripts/instantiate_roboto_serif.py --input '$(ROBOTO_VARIABLE_SOURCE)' --output "$(EXTRABOLD_AUDIT_DIR)/Roboto-W667.ttf" --weight 666.667
+	$(FONTFORGE) -lang=py -script scripts/build_extrabold_microfonts.py \
+		--ridibatang sources/ridibatang/RIDIBatang.otf \
+		--latin-source 610="$(EXTRABOLD_AUDIT_DIR)/Roboto-W610.ttf" \
+		--latin-source 620="$(EXTRABOLD_AUDIT_DIR)/Roboto-W620.ttf" \
+		--latin-source 633="$(EXTRABOLD_AUDIT_DIR)/Roboto-W633.ttf" \
+		--latin-source 650="$(EXTRABOLD_AUDIT_DIR)/Roboto-W650.ttf" \
+		--latin-source 667="$(EXTRABOLD_AUDIT_DIR)/Roboto-W667.ttf" \
+		--output-dir "$(EXTRABOLD_AUDIT_DIR)"
+	$(PYTHON) scripts/audit_extrabold_candidates.py \
+		--regular "$(OUTPUT)" \
+		--bold "$(BOLD_OUTPUT)" \
+		--candidate-dir "$(EXTRABOLD_AUDIT_DIR)" \
+		--output "$(EXTRABOLD_AUDIT)"
+	$(PYTHON) scripts/render_extrabold_rasters.py \
+		--bold "$(BOLD_OUTPUT)" \
+		--candidate-dir "$(EXTRABOLD_AUDIT_DIR)" \
+		--output-dir "$(EXTRABOLD_AUDIT_DIR)/rasters"
+	$(TYPST) compile \
+		--root . \
+		--font-path "$(DIST_DIR)" \
+		--font-path "$(EXTRABOLD_AUDIT_DIR)" \
+		specimen/extrabold-microproof.typ "$(EXTRABOLD_SPECIMEN)"
+
+family-specimen: full-build weight-range-audit extrabold-full-audit
 	mkdir -p "$(PROOF_DIR)"
 	$(TYPST) compile \
+		--root . \
 		--font-path "$(DIST_DIR)" \
 		specimen/full-weight-proof.typ "$(FULL_WEIGHT_SPECIMEN)"
 	$(TYPST) compile --ppi 96 \
+		--root . \
 		--font-path "$(DIST_DIR)" \
 		specimen/full-weight-proof.typ "$(PROOF_DIR)/SNUJaha-Full-Weight-Range-96-{p}.png"
 	$(TYPST) compile --ppi 144 \
+		--root . \
 		--font-path "$(DIST_DIR)" \
 		specimen/full-weight-proof.typ "$(PROOF_DIR)/SNUJaha-Full-Weight-Range-144-{p}.png"
 	$(TYPST) compile --ppi 300 \
+		--root . \
 		--font-path "$(DIST_DIR)" \
 		specimen/full-weight-proof.typ "$(PROOF_DIR)/SNUJaha-Full-Weight-Range-300-{p}.png"
 
@@ -277,4 +354,4 @@ test:
 	$(PYTHON) -m unittest discover -s tests
 
 clean:
-	rm -rf "$(BUILD_DIR)" "$(DIST_DIR)" "$(SPECIMEN)" "$(BOLD_SPECIMEN)" "$(WEIGHT_SPECIMEN)" "$(LIGHTWEIGHT_SPECIMEN)" "$(FULL_WEIGHT_SPECIMEN)" "$(MIXED_TEXT_PROOF)" "$(PROOF_DIR)"/*.png
+	rm -rf "$(BUILD_DIR)" "$(DIST_DIR)" "$(SPECIMEN)" "$(BOLD_SPECIMEN)" "$(WEIGHT_SPECIMEN)" "$(LIGHTWEIGHT_SPECIMEN)" "$(EXTRABOLD_SPECIMEN)" "$(FULL_WEIGHT_SPECIMEN)" "$(MIXED_TEXT_PROOF)" "$(PROOF_DIR)"/*.png

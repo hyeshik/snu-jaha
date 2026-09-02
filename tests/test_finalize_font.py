@@ -22,6 +22,8 @@ class FinalizeFontPolicyTests(unittest.TestCase):
         self.assertEqual(finalizer.STYLE_METRICS["SemiBold"].x_height, 493)
         self.assertEqual(finalizer.STYLE_METRICS["Bold"].cap_height, 654)
         self.assertEqual(finalizer.STYLE_METRICS["Bold"].x_height, 494)
+        self.assertEqual(finalizer.STYLE_METRICS["ExtraBold"].cap_height, 654)
+        self.assertEqual(finalizer.STYLE_METRICS["ExtraBold"].x_height, 494)
 
     def test_charstring_width_uses_target_private_metrics(self) -> None:
         private = SimpleNamespace(defaultWidthX=560, nominalWidthX=885)

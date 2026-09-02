@@ -37,6 +37,7 @@ class StyleSpec:
             "Medium": "Medium",
             "SemiBold": "DemiBold",
             "Bold": "Bold",
+            "ExtraBold": "Heavy",
         }[self.name]
 
     @property
@@ -55,6 +56,7 @@ STYLE_SPECS = {
     "Medium": StyleSpec("Medium", 500),
     "SemiBold": StyleSpec("SemiBold", 600),
     "Bold": StyleSpec("Bold", 700),
+    "ExtraBold": StyleSpec("ExtraBold", 800),
 }
 DEFAULT_STYLE = STYLE_SPECS["Regular"]
 POSTSCRIPT_NAME = DEFAULT_STYLE.postscript_name

@@ -64,6 +64,10 @@ STYLE_METRICS = {
         cap_height=654,
         x_height=494,
     ),
+    "ExtraBold": StyleMetrics(
+        cap_height=654,
+        x_height=494,
+    ),
 }
 CAP_HEIGHT = STYLE_METRICS["Regular"].cap_height
 X_HEIGHT = STYLE_METRICS["Regular"].x_height
@@ -241,6 +245,11 @@ def finalize(
         font["head"].fontRevision = 0.1
         font["head"].created = BUILD_TIMESTAMP
         font["head"].modified = BUILD_TIMESTAMP
+        font["head"].macStyle = 1 if style == "Bold" else 0
+        font["OS/2"].fsSelection = {
+            "Regular": 64,
+            "Bold": 32,
+        }.get(style, 0)
         font["OS/2"].sCapHeight = metrics.cap_height
         font["OS/2"].sxHeight = metrics.x_height
         for table_tag in ("DSIG", "FFTM"):

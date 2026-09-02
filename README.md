@@ -5,9 +5,9 @@ reading. Its name comes from Jahayeon (자하연) at Seoul National University.
 The Regular build keeps Korean and East Asian glyphs from RIDIBatang and
 replaces Latin, Cyrillic, and general punctuation with Roboto Serif 14pt
 Regular. Default `0–9` figures come from RIDIBatang for restrained academic
-number setting. The complete six-style range adds Thin, Light, Medium,
-SemiBold, and Bold with measured source weights rather than treating weight
-names as direct source-font substitutions.
+number setting. The complete seven-style range adds Thin, Light, Medium,
+SemiBold, Bold, and ExtraBold with measured source weights rather than treating
+weight names as direct source-font substitutions.
 
 ## Design decisions
 
@@ -29,14 +29,15 @@ names as direct source-font substitutions.
 - Roboto Serif kerning values are scaled with the Latin geometry.
 - Hyphen, en dash, and em dash use figure-specific optical kerning before
   RIDIBatang's default digits; the mathematical minus sign remains unkerned.
-- Family, style, full, and PostScript names are rewritten for the six
+- Family, style, full, and PostScript names are rewritten for the seven
   `SNU Jaha` styles.
 
 ## Complete weight range
 
-The range keeps the approved Bold as its upper bound, retains the three measured
-positive steps, and adds the two negative-weight constructions that passed the
-representative and full-font audits:
+The text range keeps the approved Bold as its upper bound, retains the three
+measured positive steps, and adds the two negative-weight constructions that
+passed the representative and full-font audits. The family also includes the
+separately reviewed ExtraBold display extension:
 
 | Style | Metadata | RIDIBatang increase | Roboto source `wght` | Figure x-scale |
 |---|---:|---:|---:|---:|
@@ -46,6 +47,7 @@ representative and full-font audits:
 | Medium | 500 | +8 | 466.667 | 98.1333% |
 | SemiBold | 600 | +16 | 533.333 | 96.2667% |
 | Bold | 700 | +24 | 600 | 94.4% |
+| ExtraBold | 800 | +30 retain | 633.333 | 93% |
 
 Korean, East Asian context glyphs, and the default figures receive the listed
 FontForge weight offset. Their advance widths are preserved; any glyph whose
@@ -53,17 +55,19 @@ weighting changes its advance is recentered before its original advance is
 restored. Latin and general punctuation use static Roboto Serif instances at
 the listed source coordinates and retain the Regular geometry transform.
 
-The conservative source-weight mapping keeps the current Bold at 700. A second
-scheme that would relabel it SemiBold and add RIDIBatang +32 / Roboto 700 as a
-new Bold was considered, but the four Regular–Bold steps are visibly distinct
-while the stronger scheme would put more pressure on dense Hangul counters at
-small sizes.
+The conservative source-weight mapping keeps the approved Bold at 700.
+ExtraBold uses the separately reviewed `+30 retain` construction: it starts
+again from RIDIBatang Regular rather than applying a second transformation to
+Bold. Its minimum-size and counter behavior are documented as a display-style
+decision in `WEIGHTS.md`.
 
 The full-font audit checks all 12,656 encoded characters, including all 11,172
 modern Hangul syllables, for missing outlines, advance changes, and
-`Thin ≤ Light ≤ Regular` raster-ink order. Its specimen compares all six
-weights, stresses dense Hangul counters and figures, and tests academic
-document hierarchy over four pages and three raster resolutions.
+`Thin ≤ Light ≤ Regular` raster-ink order. The ExtraBold audit independently
+checks the complete `Bold < ExtraBold` CJK vector and 64 ppem raster order. The
+specimen compares all seven weights, stresses dense Hangul counters and
+figures, and tests academic document hierarchy over five pages and three
+raster resolutions.
 
 See `WEIGHTS.md` for measured ink areas, tabular-figure spacing, role
 assignments, and the comparison with a stronger alternative Bold.
@@ -94,14 +98,14 @@ This creates:
 - `dist/SNUJaha-Regular.otf`
 - `proof/SNUJaha-Regular-Specimen.pdf`
 
-To build and verify all six static styles and the complete proof, run:
+To build and verify all seven static styles and the complete proof, run:
 
 ```sh
 make PYTHON=.venv/bin/python family-specimen
 ```
 
-This creates `dist/SNUJaha-{Thin,Light,Regular,Medium,SemiBold,Bold}.otf`,
-`proof/SNUJaha-Full-Weight-Range-Specimen.pdf`, and four-page raster proofs at
+This creates `dist/SNUJaha-{Thin,Light,Regular,Medium,SemiBold,Bold,ExtraBold}.otf`,
+`proof/SNUJaha-Full-Weight-Range-Specimen.pdf`, and five-page raster proofs at
 96, 144, and 300 dpi.
 
 To build the first Bold candidate and its three-page comparison proof, run:
@@ -137,6 +141,17 @@ This builds disposable CJK/Latin microfonts, measures outline area, tabular
 figure spacing, advances, and 64 ppem connectivity, then creates
 `proof/SNUJaha-Light-Thin-Microproof.pdf`. The accepted Stage 1 construction
 coordinates and reviewed connection exceptions are recorded in `WEIGHTS.md`.
+
+To reproduce the ExtraBold Stage 1 search, run:
+
+```sh
+make PYTHON=.venv/bin/python extrabold-audit
+```
+
+This compares 12 positive-weight CJK microfonts and five Roboto Serif
+instances, audits counters and connections at 24, 32, 48, and 64 ppem, and
+creates `proof/SNUJaha-ExtraBold-Microproof.pdf`. The command remains a Stage 1
+search and does not itself replace the reviewed full ExtraBold construction.
 
 For a dense three-page Korean/English scientific reading test with statistics,
 units, tables, and citations, run:
