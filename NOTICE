@@ -1,0 +1,17 @@
+SNU Jaha
+
+SNU Jaha is a derivative font prepared by Hyeshik Chang. The Regular build
+keeps Korean and East Asian glyphs from RIDIBatang and imports non-CJK glyphs
+and OpenType layout features from Roboto Serif 14pt Regular.
+
+Upstream font software:
+
+- RIDIBatang, copyright © 2019 RIDI & Sandoll. Font designed by Sandoll Inc.
+- Roboto Serif, copyright the Roboto Serif Project Authors.
+
+SNU Jaha is not endorsed by RIDI, Sandoll, Google, Commercial Type, or the
+Roboto Serif Project Authors. The upstream family names are used only for
+attribution and source identification.
+
+All font software is provided under the SIL Open Font License, Version 1.1.
+See LICENSE and the files under licenses/.

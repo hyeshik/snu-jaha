@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.venv/
+
+build/
+dist/
+proof/*.pdf
+proof/*.png
+
+sources/downloads/
+sources/ridibatang/
+sources/roboto-serif/
