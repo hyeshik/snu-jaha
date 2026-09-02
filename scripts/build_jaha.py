@@ -4,13 +4,12 @@ from __future__ import annotations
 import argparse
 import contextlib
 import os
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator
 
 
 FAMILY_NAME = "SNU Jaha"
-POSTSCRIPT_NAME = "SNUJaha-Regular"
-STYLE_NAME = "Regular"
 VERSION = "0.1.0"
 VENDOR_ID = "HCHK"
 TARGET_UPM = 1000
@@ -18,6 +17,33 @@ TARGET_UPM = 1000
 LATIN_X_SCALE = 0.895
 LATIN_Y_SCALE = 0.936
 LATIN_Y_SHIFT = -11.0
+
+
+@dataclass(frozen=True)
+class StyleSpec:
+    name: str
+    weight_class: int
+
+    @property
+    def postscript_name(self) -> str:
+        return f"SNUJaha-{self.name}"
+
+    @property
+    def fontforge_weight(self) -> str:
+        return "Normal" if self.name == "Regular" else self.name
+
+    @property
+    def stylemap(self) -> int:
+        return 64 if self.name == "Regular" else 32
+
+
+STYLE_SPECS = {
+    "Regular": StyleSpec("Regular", 400),
+    "Bold": StyleSpec("Bold", 700),
+}
+DEFAULT_STYLE = STYLE_SPECS["Regular"]
+POSTSCRIPT_NAME = DEFAULT_STYLE.postscript_name
+STYLE_NAME = DEFAULT_STYLE.name
 
 RIDI_COPYRIGHT = (
     "Copyright © 2019 RIDI & Sandoll. All rights reserved. "
@@ -37,7 +63,7 @@ LICENSE_DESCRIPTION = (
 LICENSE_URL = "https://openfontlicense.org"
 
 # The Korean source remains responsible for Korean and East Asian glyphs. The
-# The Latin source supplies Latin, Cyrillic, punctuation, and the glyph slots
+# Latin source supplies Latin, Cyrillic, punctuation, and the glyph slots
 # and OpenType alternates for figures. Finalization replaces the default 0–9
 # outlines and metrics with RIDIBatang originals without disturbing those
 # feature connections. Context symbols commonly used as Korean list markers
@@ -167,18 +193,18 @@ def transform_latin(font) -> int:
     return changed
 
 
-def rewrite_metadata(font) -> None:
+def rewrite_metadata(font, style: StyleSpec) -> None:
     font.familyname = FAMILY_NAME
-    font.fullname = f"{FAMILY_NAME} {STYLE_NAME}"
-    font.fontname = POSTSCRIPT_NAME
-    font.weight = "Normal"
+    font.fullname = f"{FAMILY_NAME} {style.name}"
+    font.fontname = style.postscript_name
+    font.weight = style.fontforge_weight
     font.version = VERSION
     font.copyright = COPYRIGHT_TEXT
-    font.os2_weight = 400
+    font.os2_weight = style.weight_class
     font.os2_width = 5
     font.os2_fstype = 0
     font.os2_vendor = VENDOR_ID
-    font.os2_stylemap = 64
+    font.os2_stylemap = style.stylemap
     font.italicangle = 0
 
     source_notice = (
@@ -188,11 +214,15 @@ def rewrite_metadata(font) -> None:
     font.sfnt_names = (
         ("English (US)", "Copyright", COPYRIGHT_TEXT),
         ("English (US)", "Family", FAMILY_NAME),
-        ("English (US)", "SubFamily", STYLE_NAME),
-        ("English (US)", "UniqueID", f"{VERSION};{VENDOR_ID};{POSTSCRIPT_NAME}"),
-        ("English (US)", "Fullname", f"{FAMILY_NAME} {STYLE_NAME}"),
+        ("English (US)", "SubFamily", style.name),
+        (
+            "English (US)",
+            "UniqueID",
+            f"{VERSION};{VENDOR_ID};{style.postscript_name}",
+        ),
+        ("English (US)", "Fullname", f"{FAMILY_NAME} {style.name}"),
         ("English (US)", "Version", f"Version {VERSION}"),
-        ("English (US)", "PostScriptName", POSTSCRIPT_NAME),
+        ("English (US)", "PostScriptName", style.postscript_name),
         ("English (US)", "Trademark", source_notice),
         ("English (US)", "Manufacturer", "Hyeshik Chang"),
         (
@@ -201,14 +231,20 @@ def rewrite_metadata(font) -> None:
             "RIDI, Sandoll, Roboto Serif Project Authors; Hyeshik Chang (modifications)",
         ),
         ("English (US)", "Preferred Family", FAMILY_NAME),
-        ("English (US)", "Preferred Styles", STYLE_NAME),
-        ("English (US)", "Compatible Full", f"{FAMILY_NAME} {STYLE_NAME}"),
+        ("English (US)", "Preferred Styles", style.name),
+        ("English (US)", "Compatible Full", f"{FAMILY_NAME} {style.name}"),
         ("English (US)", "License", LICENSE_DESCRIPTION),
         ("English (US)", "License URL", LICENSE_URL),
     )
 
 
-def build(ridibatang: Path, roboto_serif: Path, output: Path, quiet: bool) -> None:
+def build(
+    ridibatang: Path,
+    roboto_serif: Path,
+    output: Path,
+    style: StyleSpec,
+    quiet: bool,
+) -> None:
     try:
         import fontforge
     except ModuleNotFoundError as exc:
@@ -241,7 +277,7 @@ def build(ridibatang: Path, roboto_serif: Path, output: Path, quiet: bool) -> No
         ridi_removed = remove_non_cjk_glyphs(base)
         with suppress_c_stderr(quiet):
             base.mergeFonts(str(transformed_latin))
-        rewrite_metadata(base)
+        rewrite_metadata(base, style)
         with suppress_c_stderr(quiet):
             validation = base.validate()
             base.generate(str(output), flags=("opentype",))
@@ -250,7 +286,7 @@ def build(ridibatang: Path, roboto_serif: Path, output: Path, quiet: bool) -> No
         transformed_latin.unlink(missing_ok=True)
 
     print(
-        f"{output}: cid_flattened={flattened}, "
+        f"{output}: style={style.name}, cid_flattened={flattened}, "
         f"ridi_non_cjk_removed={ridi_removed}, "
         f"ridi_lookups_removed={removed_lookups}, "
         f"roboto_cjk_removed={latin_cjk_removed}, "
@@ -262,11 +298,12 @@ def build(ridibatang: Path, roboto_serif: Path, output: Path, quiet: bool) -> No
 
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(
-        description="Build SNU Jaha Regular from RIDIBatang and Roboto Serif."
+        description="Build a SNU Jaha style from RIDIBatang and Roboto Serif."
     )
     result.add_argument("--ridibatang", required=True)
     result.add_argument("--roboto-serif", required=True)
     result.add_argument("--output", required=True)
+    result.add_argument("--style", choices=STYLE_SPECS, default="Regular")
     result.add_argument("--verbose-fontforge", action="store_true")
     return result
 
@@ -277,6 +314,7 @@ def main() -> None:
         Path(args.ridibatang),
         Path(args.roboto_serif),
         Path(args.output),
+        STYLE_SPECS[args.style],
         quiet=not args.verbose_fontforge,
     )
 

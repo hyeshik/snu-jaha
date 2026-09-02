@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 import build_jaha as builder
+import build_ridi_weight as weight_builder
 
 
 class BuildJahaPolicyTests(unittest.TestCase):
@@ -16,6 +17,12 @@ class BuildJahaPolicyTests(unittest.TestCase):
         self.assertEqual(builder.FAMILY_NAME, "SNU Jaha")
         self.assertEqual(builder.POSTSCRIPT_NAME, "SNUJaha-Regular")
         self.assertEqual(builder.VERSION, "0.1.0")
+        self.assertEqual(builder.STYLE_SPECS["Regular"].weight_class, 400)
+        self.assertEqual(builder.STYLE_SPECS["Bold"].weight_class, 700)
+        self.assertEqual(
+            builder.STYLE_SPECS["Bold"].postscript_name,
+            "SNUJaha-Bold",
+        )
 
     def test_hangul_and_cjk_punctuation_stay_with_ridi(self) -> None:
         for codepoint in (0x1100, 0x3131, 0x3001, 0xAC00, 0xD7A3, 0xFF01):
@@ -51,6 +58,13 @@ class BuildJahaPolicyTests(unittest.TestCase):
             (builder.LATIN_Y_SHIFT + transformed_cap_top) / 2,
             321.28,
         )
+
+    def test_bold_default_figures_keep_tabular_cells(self) -> None:
+        self.assertEqual(weight_builder.DEFAULT_FIGURE_X_SCALE, 0.944)
+        for character in "0123456789":
+            with self.subTest(character=character):
+                self.assertTrue(weight_builder.should_weight(ord(character)))
+        self.assertFalse(weight_builder.should_weight(ord("A")))
 
 
 if __name__ == "__main__":

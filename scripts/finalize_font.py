@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import dataclass
 from pathlib import Path
 
 from fontTools.otlLib.builder import (
@@ -15,8 +16,6 @@ from fontTools.ttLib import TTFont
 
 HORIZONTAL_VALUE_FIELDS = ("XPlacement", "XAdvance")
 BUILD_TIMESTAMP = 3871152000  # 2026-09-02 00:00:00 UTC in the OpenType epoch.
-CAP_HEIGHT = 654
-X_HEIGHT = 492
 KERN_SCALE = 0.895
 DEFAULT_FIGURES = "0123456789"
 DASHES_WITH_FIGURE_KERNING = "-–—"
@@ -32,6 +31,26 @@ DASH_FIGURE_KERNING = {
     "8": 0,
     "9": 0,
 }
+
+
+@dataclass(frozen=True)
+class StyleMetrics:
+    cap_height: int
+    x_height: int
+
+
+STYLE_METRICS = {
+    "Regular": StyleMetrics(
+        cap_height=654,
+        x_height=492,
+    ),
+    "Bold": StyleMetrics(
+        cap_height=654,
+        x_height=494,
+    ),
+}
+CAP_HEIGHT = STYLE_METRICS["Regular"].cap_height
+X_HEIGHT = STYLE_METRICS["Regular"].x_height
 
 
 def pair_position_subtables(lookup):
@@ -193,7 +212,9 @@ def finalize(
     ridibatang_path: Path,
     output: Path,
     kern_scale: float,
+    style: str,
 ) -> None:
+    metrics = STYLE_METRICS[style]
     font = TTFont(source, recalcTimestamp=False)
     ridibatang = TTFont(ridibatang_path)
     try:
@@ -204,8 +225,8 @@ def finalize(
         font["head"].fontRevision = 0.1
         font["head"].created = BUILD_TIMESTAMP
         font["head"].modified = BUILD_TIMESTAMP
-        font["OS/2"].sCapHeight = CAP_HEIGHT
-        font["OS/2"].sxHeight = X_HEIGHT
+        font["OS/2"].sCapHeight = metrics.cap_height
+        font["OS/2"].sxHeight = metrics.x_height
         for table_tag in ("DSIG", "FFTM"):
             if table_tag in font:
                 del font[table_tag]
@@ -215,7 +236,7 @@ def finalize(
         ridibatang.close()
         font.close()
     print(
-        f"{output}: ridi_default_figures={replaced_figures}, "
+        f"{output}: style={style}, ridi_default_figures={replaced_figures}, "
         f"disabled_lnum_lookups={disabled_lnum_lookups}, "
         f"dash_figure_pairs={dash_figure_pairs}, "
         f"kern_lookups={lookup_count}, "
@@ -229,12 +250,14 @@ def main() -> None:
     parser.add_argument("--ridibatang", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--kern-scale", type=float, default=KERN_SCALE)
+    parser.add_argument("--style", choices=STYLE_METRICS, default="Regular")
     args = parser.parse_args()
     finalize(
         Path(args.input),
         Path(args.ridibatang),
         Path(args.output),
         args.kern_scale,
+        args.style,
     )
 
 

@@ -31,6 +31,7 @@ download "$ROBOTO_SERIF_URL" "$ROBOTO_ARCHIVE" "$ROBOTO_SERIF_SHA256"
 cp "$RIDI_ARCHIVE" "$RIDI_DIR/RIDIBatang.otf"
 unzip -j -o "$ROBOTO_ARCHIVE" \
     ttf/RobotoSerif14pt-Regular.ttf \
+    ttf/RobotoSerif14pt-SemiBold.ttf \
     -d "$ROBOTO_DIR"
 
 echo "Sources are ready."

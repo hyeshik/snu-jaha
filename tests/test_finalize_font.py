@@ -13,6 +13,12 @@ import finalize_font as finalizer
 
 
 class FinalizeFontPolicyTests(unittest.TestCase):
+    def test_style_metrics_follow_visible_latin_bounds(self) -> None:
+        self.assertEqual(finalizer.STYLE_METRICS["Regular"].cap_height, 654)
+        self.assertEqual(finalizer.STYLE_METRICS["Regular"].x_height, 492)
+        self.assertEqual(finalizer.STYLE_METRICS["Bold"].cap_height, 654)
+        self.assertEqual(finalizer.STYLE_METRICS["Bold"].x_height, 494)
+
     def test_charstring_width_uses_target_private_metrics(self) -> None:
         private = SimpleNamespace(defaultWidthX=560, nominalWidthX=885)
         self.assertIsNone(finalizer.encoded_charstring_width(560, private))

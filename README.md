@@ -5,11 +5,8 @@ reading. Its name comes from Jahayeon (자하연) at Seoul National University.
 The Regular build keeps Korean and East Asian glyphs from RIDIBatang and
 replaces Latin, Cyrillic, and general punctuation with Roboto Serif 14pt
 Regular. Default `0–9` figures come from RIDIBatang for restrained academic
-number setting.
-
-The first end-to-end build deliberately contains one style. It establishes the
-source policy, geometry, metadata, OpenType feature retention, verification,
-and specimen before the family grows to more weights.
+number setting. A first Bold candidate pairs a conservative 24-unit synthetic
+weight increase of the RIDIBatang glyphs with Roboto Serif 14pt SemiBold.
 
 ## Design decisions
 
@@ -32,6 +29,24 @@ and specimen before the family grows to more weights.
   RIDIBatang's default digits; the mathematical minus sign remains unkerned.
 - Family, full, and PostScript names are rewritten to `SNU Jaha`,
   `SNU Jaha Regular`, and `SNUJaha-Regular`.
+
+## Bold candidate A
+
+The first weight experiment targets headings, section titles, and brief inline
+emphasis rather than continuous Bold text. Korean, East Asian context glyphs,
+and the default figures receive a 24-unit FontForge weight increase. Their
+advance widths are preserved; any glyph whose weighting changes its advance is
+recentered before its original advance is restored. Latin and general
+punctuation use Roboto Serif 14pt SemiBold (source weight 600), transformed with
+the same geometry as Regular and exposed as `Bold` / weight class 700. The
+weighted default figure outlines are horizontally corrected to 94.4% inside
+their original 560-unit cells. This restores repeated-figure spacing without
+pair kerning and keeps tabular alignment identical across all digits and both
+weights.
+
+This is an evaluation candidate, not a frozen family master. Its specimen
+compares Regular and Bold, stresses dense Hangul counters and figures, and
+tests academic document hierarchy over three pages.
 
 The current transform is a measured starting point rather than a frozen family
 contract. See `ALIGNMENT.md` for the reference measurements. The specimen gives
@@ -60,6 +75,17 @@ This creates:
 - `dist/SNUJaha-Regular.otf`
 - `proof/SNUJaha-Regular-Specimen.pdf`
 
+To build the first Bold candidate and its three-page comparison proof, run:
+
+```sh
+make PYTHON=.venv/bin/python bold-specimen
+```
+
+This creates:
+
+- `dist/SNUJaha-Bold.otf`
+- `proof/SNUJaha-Bold-Candidate-Specimen.pdf`
+
 For a dense three-page Korean/English scientific reading test with statistics,
 units, tables, and citations, run:
 
@@ -77,11 +103,13 @@ digests. Source fonts and generated outputs are intentionally ignored by Git.
 ```sh
 make PYTHON=.venv/bin/python test
 make PYTHON=.venv/bin/python verify
+make PYTHON=.venv/bin/python bold-verify
 ```
 
-The output audit checks CFF format, UPM, weight and embedding metadata, full
-modern Hangul coverage, representative Latin/Cyrillic coverage, family names,
-and the expected Roboto Serif layout features.
+The output audits check CFF format, UPM, style flags, weight and embedding
+metadata, full modern Hangul coverage, representative Latin/Cyrillic coverage,
+figure dimensions and advances, family names, and the expected Roboto Serif
+layout features.
 
 ## Sources and licensing
 

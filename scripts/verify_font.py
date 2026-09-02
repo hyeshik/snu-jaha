@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 from fontTools.pens.boundsPen import BoundsPen
@@ -10,13 +11,7 @@ from fontTools.ttLib import TTFont
 
 EXPECTED_GSUB = {"frac", "liga", "lnum", "onum", "pnum", "tnum", "zero"}
 EXPECTED_GPOS = {"kern", "mark"}
-EXPECTED_REFERENCE_ADVANCES = {"H": 763, "M": 876, "g": 567, "n": 604}
 EXPECTED_DEFAULT_FIGURE_ADVANCE = 560
-EXPECTED_DEFAULT_FIGURE_BOUNDS = {
-    "0": (36, -21, 524, 673),
-    "3": (76, -21, 504, 673),
-    "8": (50, -25, 510, 677),
-}
 EXPECTED_ACTIVE_FIGURE_FEATURES = {
     "frac",
     "onum",
@@ -38,6 +33,50 @@ EXPECTED_DASH_FIGURE_KERNING = {
     "7": -30,
     "8": 0,
     "9": 0,
+}
+
+
+@dataclass(frozen=True)
+class StyleProfile:
+    weight_class: int
+    postscript_name: str
+    fs_selection: int
+    mac_style: int
+    cap_height: int
+    x_height: int
+    reference_advances: dict[str, int]
+    figure_bounds: dict[str, tuple[float, float, float, float]]
+
+
+STYLE_PROFILES = {
+    "Regular": StyleProfile(
+        weight_class=400,
+        postscript_name="SNUJaha-Regular",
+        fs_selection=64,
+        mac_style=0,
+        cap_height=654,
+        x_height=492,
+        reference_advances={"H": 763, "M": 876, "g": 567, "n": 604},
+        figure_bounds={
+            "0": (36, -21, 524, 673),
+            "3": (76, -21, 504, 673),
+            "8": (50, -25, 510, 677),
+        },
+    ),
+    "Bold": StyleProfile(
+        weight_class=700,
+        postscript_name="SNUJaha-Bold",
+        fs_selection=32,
+        mac_style=1,
+        cap_height=654,
+        x_height=494,
+        reference_advances={"H": 758, "M": 887, "g": 593, "n": 622},
+        figure_bounds={
+            "0": (27, -21, 533, 673),
+            "3": (65, -21, 515, 673),
+            "8": (40, -25, 520, 677),
+        },
+    ),
 }
 
 
@@ -114,18 +153,30 @@ def pair_x_advance(font: TTFont, left: str, right: str) -> int:
 def verify(path: Path) -> None:
     errors: list[str] = []
     with TTFont(path) as font:
+        style_names = decoded_names(font, 2)
+        if len(style_names) != 1 or not style_names <= STYLE_PROFILES.keys():
+            errors.append(f"unexpected style names: {sorted(style_names)}")
+            style_name = "Regular"
+        else:
+            style_name = next(iter(style_names))
+        profile = STYLE_PROFILES[style_name]
+
         if "CFF " not in font or "glyf" in font:
             errors.append("output must use CFF outlines")
         if font["head"].unitsPerEm != 1000:
             errors.append("unitsPerEm must be 1000")
-        if font["OS/2"].usWeightClass != 400:
-            errors.append("weight class must be 400")
+        if font["OS/2"].usWeightClass != profile.weight_class:
+            errors.append(f"weight class must be {profile.weight_class}")
+        if font["OS/2"].fsSelection != profile.fs_selection:
+            errors.append(f"fsSelection must be {profile.fs_selection}")
+        if font["head"].macStyle != profile.mac_style:
+            errors.append(f"macStyle must be {profile.mac_style}")
         if font["OS/2"].fsType != 0:
             errors.append("embedding must be unrestricted")
-        if font["OS/2"].sCapHeight != 654:
-            errors.append("cap height must be 654")
-        if font["OS/2"].sxHeight != 492:
-            errors.append("x-height must be 492")
+        if font["OS/2"].sCapHeight != profile.cap_height:
+            errors.append(f"cap height must be {profile.cap_height}")
+        if font["OS/2"].sxHeight != profile.x_height:
+            errors.append(f"x-height must be {profile.x_height}")
 
         cmap = font.getBestCmap()
         hangul_count = sum(0xAC00 <= codepoint <= 0xD7A3 for codepoint in cmap)
@@ -134,7 +185,7 @@ def verify(path: Path) -> None:
         for character in "가힣Aa0éЖ":
             if ord(character) not in cmap:
                 errors.append(f"missing required character U+{ord(character):04X}")
-        for character, expected_advance in EXPECTED_REFERENCE_ADVANCES.items():
+        for character, expected_advance in profile.reference_advances.items():
             glyph_name = cmap[ord(character)]
             actual_advance = font["hmtx"][glyph_name][0]
             if actual_advance != expected_advance:
@@ -150,8 +201,15 @@ def verify(path: Path) -> None:
                     f"{character} advance is {actual_advance}, "
                     f"expected RIDIBatang advance {EXPECTED_DEFAULT_FIGURE_ADVANCE}"
                 )
+        zero_name = cmap[ord("0")]
+        zero_zero_kerning = pair_x_advance(font, zero_name, zero_name)
+        if zero_zero_kerning != 0:
+            errors.append(
+                f"00 kerning is {zero_zero_kerning}; "
+                "tabular default figures must remain unkerned"
+            )
         glyph_set = font.getGlyphSet()
-        for character, expected_bounds in EXPECTED_DEFAULT_FIGURE_BOUNDS.items():
+        for character, expected_bounds in profile.figure_bounds.items():
             glyph_name = cmap[ord(character)]
             pen = BoundsPen(glyph_set)
             glyph_set[glyph_name].draw(pen)
@@ -164,9 +222,7 @@ def verify(path: Path) -> None:
 
         if decoded_names(font, 1) != {"SNU Jaha"}:
             errors.append(f"unexpected family names: {sorted(decoded_names(font, 1))}")
-        if decoded_names(font, 2) != {"Regular"}:
-            errors.append(f"unexpected style names: {sorted(decoded_names(font, 2))}")
-        if decoded_names(font, 6) != {"SNUJaha-Regular"}:
+        if decoded_names(font, 6) != {profile.postscript_name}:
             errors.append(
                 f"unexpected PostScript names: {sorted(decoded_names(font, 6))}"
             )
@@ -204,7 +260,7 @@ def verify(path: Path) -> None:
             raise SystemExit(f"{path} failed verification:\n- " + "\n- ".join(errors))
 
         print(
-            f"{path}: OK; glyphs={len(font.getGlyphOrder())}, "
+            f"{path}: OK; style={style_name}, glyphs={len(font.getGlyphOrder())}, "
             f"cmap={len(cmap)}, hangul={hangul_count}, "
             f"GSUB={','.join(sorted(feature_tags(font, 'GSUB')))}, "
             f"GPOS={','.join(sorted(feature_tags(font, 'GPOS')))}"
