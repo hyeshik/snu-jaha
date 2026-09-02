@@ -164,6 +164,15 @@
     #text(size: 9pt, fill: gray)[liga · frac · kern · mark 기능 계승]
   ],
 )
+#v(2.5mm)
+#grid(
+  columns: (31mm, 1fr),
+  row-gutter: 1.2mm,
+  [#eyebrow[HYPHEN + FIGURE]], [#text(size: 14pt)[-0 -1 -2 -3 -4 -5 -6 -7 -8 -9]],
+  [#eyebrow[EN DASH + FIGURE]], [#text(size: 14pt)[–0 –1 –2 –3 –4 –5 –6 –7 –8 –9]],
+  [#eyebrow[EM DASH + FIGURE]], [#text(size: 14pt)[—0 —1 —2 —3 —4 —5 —6 —7 —8 —9]],
+  [#eyebrow[MINUS + FIGURE]], [#text(size: 14pt)[−0 −1 −2 −3 −4 −5 −6 −7 −8 −9]],
+)
 
 #pagebreak()
 

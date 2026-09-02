@@ -27,6 +27,18 @@ EXPECTED_ACTIVE_FIGURE_FEATURES = {
     "tnum",
     "zero",
 }
+EXPECTED_DASH_FIGURE_KERNING = {
+    "0": -15,
+    "1": -20,
+    "2": -40,
+    "3": -20,
+    "4": -30,
+    "5": -20,
+    "6": 0,
+    "7": -30,
+    "8": 0,
+    "9": 0,
+}
 
 
 def decoded_names(font: TTFont, name_id: int) -> set[str]:
@@ -58,6 +70,45 @@ def feature_lookup_indices(font: TTFont, table_tag: str, feature_tag: str) -> li
         if record.FeatureTag == feature_tag
         for index in record.Feature.LookupListIndex
     ]
+
+
+def pair_position_subtables(lookup):
+    if lookup.LookupType == 2:
+        yield from lookup.SubTable
+    elif lookup.LookupType == 9:
+        for extension in lookup.SubTable:
+            if extension.ExtensionLookupType == 2:
+                yield extension.ExtSubTable
+
+
+def value_x_advance(value) -> int:
+    return getattr(value, "XAdvance", 0) if value is not None else 0
+
+
+def pair_x_advance(font: TTFont, left: str, right: str) -> int:
+    total = 0
+    gpos = font["GPOS"].table
+    for lookup_index in feature_lookup_indices(font, "GPOS", "kern"):
+        lookup = gpos.LookupList.Lookup[lookup_index]
+        for subtable in pair_position_subtables(lookup):
+            if left not in subtable.Coverage.glyphs:
+                continue
+            if subtable.Format == 1:
+                pair_set = subtable.PairSet[
+                    subtable.Coverage.glyphs.index(left)
+                ]
+                for pair in pair_set.PairValueRecord:
+                    if pair.SecondGlyph != right:
+                        continue
+                    total += value_x_advance(pair.Value1)
+                    total += value_x_advance(pair.Value2)
+            elif subtable.Format == 2:
+                class1 = subtable.ClassDef1.classDefs.get(left, 0)
+                class2 = subtable.ClassDef2.classDefs.get(right, 0)
+                pair = subtable.Class1Record[class1].Class2Record[class2]
+                total += value_x_advance(pair.Value1)
+                total += value_x_advance(pair.Value2)
+    return total
 
 
 def verify(path: Path) -> None:
@@ -131,6 +182,23 @@ def verify(path: Path) -> None:
         for feature_tag in EXPECTED_ACTIVE_FIGURE_FEATURES:
             if not feature_lookup_indices(font, "GSUB", feature_tag):
                 errors.append(f"{feature_tag} figure feature must remain active")
+        for dash in "-–—":
+            dash_name = cmap[ord(dash)]
+            for figure, expected in EXPECTED_DASH_FIGURE_KERNING.items():
+                figure_name = cmap[ord(figure)]
+                actual = pair_x_advance(font, dash_name, figure_name)
+                if actual != expected:
+                    errors.append(
+                        f"{dash}{figure} kerning is {actual}, expected {expected}"
+                    )
+        minus_name = cmap[ord("−")]
+        for figure in EXPECTED_DASH_FIGURE_KERNING:
+            figure_name = cmap[ord(figure)]
+            actual = pair_x_advance(font, minus_name, figure_name)
+            if actual != 0:
+                errors.append(
+                    f"−{figure} kerning is {actual}, expected unkerned minus sign"
+                )
 
         if errors:
             raise SystemExit(f"{path} failed verification:\n- " + "\n- ".join(errors))

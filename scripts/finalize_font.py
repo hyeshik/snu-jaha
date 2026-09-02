@@ -4,6 +4,11 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from fontTools.otlLib.builder import (
+    buildLookup,
+    buildPairPosGlyphsSubtable,
+    buildValue,
+)
 from fontTools.pens.t2CharStringPen import T2CharStringPen
 from fontTools.ttLib import TTFont
 
@@ -14,6 +19,19 @@ CAP_HEIGHT = 654
 X_HEIGHT = 492
 KERN_SCALE = 0.895
 DEFAULT_FIGURES = "0123456789"
+DASHES_WITH_FIGURE_KERNING = "-–—"
+DASH_FIGURE_KERNING = {
+    "0": -15,
+    "1": -20,
+    "2": -40,
+    "3": -20,
+    "4": -30,
+    "5": -20,
+    "6": 0,
+    "7": -30,
+    "8": 0,
+    "9": 0,
+}
 
 
 def pair_position_subtables(lookup):
@@ -86,6 +104,41 @@ def scale_kerning(font: TTFont, factor: float) -> tuple[int, int]:
     return len(indices), changed
 
 
+def dash_figure_adjustments(cmap: dict[int, str]) -> dict[tuple[str, str], int]:
+    return {
+        (cmap[ord(dash)], cmap[ord(figure)]): amount
+        for dash in DASHES_WITH_FIGURE_KERNING
+        for figure, amount in DASH_FIGURE_KERNING.items()
+        if amount
+    }
+
+
+def add_dash_figure_kerning(font: TTFont) -> int:
+    if "GPOS" not in font:
+        return 0
+    gpos = font["GPOS"].table
+    if gpos.FeatureList is None or gpos.LookupList is None:
+        return 0
+
+    adjustments = dash_figure_adjustments(font.getBestCmap())
+    pairs = {
+        pair: (buildValue({"XAdvance": amount}), buildValue({}))
+        for pair, amount in adjustments.items()
+    }
+    subtable = buildPairPosGlyphsSubtable(pairs, font.getReverseGlyphMap())
+    lookup = buildLookup([subtable], table="GPOS")
+    lookup_index = len(gpos.LookupList.Lookup)
+    gpos.LookupList.Lookup.append(lookup)
+    gpos.LookupList.LookupCount = len(gpos.LookupList.Lookup)
+
+    for record in gpos.FeatureList.FeatureRecord:
+        if record.FeatureTag != "kern":
+            continue
+        record.Feature.LookupListIndex.append(lookup_index)
+        record.Feature.LookupCount = len(record.Feature.LookupListIndex)
+    return len(adjustments)
+
+
 def encoded_charstring_width(width: int, private) -> int | None:
     if width == private.defaultWidthX:
         return None
@@ -147,6 +200,7 @@ def finalize(
         replaced_figures = replace_default_figures(font, ridibatang)
         disabled_lnum_lookups = make_lining_figures_default(font)
         lookup_count, value_count = scale_kerning(font, kern_scale)
+        dash_figure_pairs = add_dash_figure_kerning(font)
         font["head"].fontRevision = 0.1
         font["head"].created = BUILD_TIMESTAMP
         font["head"].modified = BUILD_TIMESTAMP
@@ -163,6 +217,7 @@ def finalize(
     print(
         f"{output}: ridi_default_figures={replaced_figures}, "
         f"disabled_lnum_lookups={disabled_lnum_lookups}, "
+        f"dash_figure_pairs={dash_figure_pairs}, "
         f"kern_lookups={lookup_count}, "
         f"kern_values_scaled={value_count}, kern_scale={kern_scale:.3f}"
     )

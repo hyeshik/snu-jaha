@@ -39,6 +39,22 @@ class FinalizeFontPolicyTests(unittest.TestCase):
         self.assertEqual(onum.LookupListIndex, [33])
         self.assertEqual(onum.LookupCount, 1)
 
+    def test_dash_figure_adjustments_share_one_optical_policy(self) -> None:
+        cmap = {
+            ord(character): f"glyph-{ord(character):04X}"
+            for character in finalizer.DASHES_WITH_FIGURE_KERNING
+            + finalizer.DEFAULT_FIGURES
+        }
+        adjustments = finalizer.dash_figure_adjustments(cmap)
+
+        self.assertEqual(len(adjustments), 21)
+        for dash in finalizer.DASHES_WITH_FIGURE_KERNING:
+            dash_name = cmap[ord(dash)]
+            self.assertEqual(adjustments[(dash_name, cmap[ord("1")])], -20)
+            self.assertEqual(adjustments[(dash_name, cmap[ord("2")])], -40)
+            self.assertEqual(adjustments[(dash_name, cmap[ord("7")])], -30)
+            self.assertNotIn((dash_name, cmap[ord("6")]), adjustments)
+
 
 if __name__ == "__main__":
     unittest.main()

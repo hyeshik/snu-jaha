@@ -28,6 +28,8 @@ and specimen before the family grows to more weights.
 - ASCII/general punctuation, Latin and Cyrillic alphabets, figure alternates,
   and the Roboto Serif GSUB/GPOS features come from Roboto Serif.
 - Roboto Serif kerning values are scaled with the Latin geometry.
+- Hyphen, en dash, and em dash use figure-specific optical kerning before
+  RIDIBatang's default digits; the mathematical minus sign remains unkerned.
 - Family, full, and PostScript names are rewritten to `SNU Jaha`,
   `SNU Jaha Regular`, and `SNUJaha-Regular`.
 

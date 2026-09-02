@@ -57,3 +57,18 @@ The base glyph names remain the Roboto Serif names, so opt-in `onum`, `pnum`,
 `lnum` feature is intentionally a no-op because the RIDIBatang defaults are
 already lining figures; `tnum` likewise leaves them at their default tabular
 width.
+
+## Dash–figure spacing
+
+Roboto Serif supplied no kerning from hyphen, en dash, or em dash into its
+figures. After the RIDIBatang defaults are installed, those three punctuation
+marks share the following optical adjustments for `0` through `9`:
+
+```text
+−15, −20, −40, −20, −30, −20, 0, −30, 0, 0
+```
+
+The larger corrections for `1`, `2`, and `7` compensate for their open upper
+left silhouettes at dash height. U+2212 MINUS SIGN intentionally remains
+unkerned so signed values retain stable tabular spacing in equations and data
+columns.
