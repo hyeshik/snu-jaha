@@ -8,6 +8,7 @@
 #let paper = rgb("#FCFBF7")
 #let extrabold-audit = json("../build/extrabold-full-audit.json")
 #let ratio(value) = str(calc.round(value * 1000) / 1000)
+#let unit(value) = str(calc.round(value * 10) / 10)
 
 #set page(
   paper: "a4",
@@ -304,7 +305,7 @@
 // Page 5 — ExtraBold full-font role
 #title(
   [ExtraBold 800: 강한 display의 상한],
-  note: [RIDI Regular 원본 +30 retain과 Roboto Serif wght 633.333입니다. 작은 크기는 진단용이며 18–36 pt의 제목과 핵심 수치를 우선 확인합니다.],
+  note: [RIDI Regular 원본 +30 retain, 한글 advance 104%, Roboto Serif wght 633.333입니다. 작은 크기는 진단용이며 18–36 pt의 제목과 핵심 수치를 우선 확인합니다.],
 )
 
 #v(4mm)
@@ -349,8 +350,8 @@
   #eyebrow[FULL-FONT AUDIT RESULT]
   #v(2mm)
   #text(size: 8.7pt)[
-    12,656 encoded characters · 11,172 modern Hangul · missing 0 · advance mismatch 0 ·
-    Bold→ExtraBold vector/raster reversal 0 · 00 gap 50 units. `뼮`의 64 ppem
+    12,656 encoded characters · 11,172 modern Hangul · median advance 943→981 · unexpected mismatch 0 ·
+    minimum pair gap #unit(extrabold-audit.at("hangul_spacing").at("minimum_gap")) units · Bold→ExtraBold vector/raster reversal 0 · 00 gap 50 units. `뼮`의 64 ppem
     counter 면적 69.2%는 microproof에서 확인한 반올림 경계 사례로 기록했습니다.
   ]
 ]

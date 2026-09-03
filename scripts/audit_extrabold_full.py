@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import json
 from pathlib import Path
+import re
 from statistics import median
 
 import numpy as np
 from fontTools.pens.areaPen import AreaPen
+from fontTools.pens.boundsPen import BoundsPen
 from fontTools.ttLib import TTFont
 from PIL import ImageFont
 
@@ -19,13 +22,21 @@ from audit_extrabold_candidates import (
 from audit_lightweight_candidates import percentile
 from audit_weight_range import zero_gap
 from build_extrabold_microfonts import HEAVY_AUDIT_CODEPOINTS
-from build_jaha import should_keep_ridi_codepoint
+from build_jaha import (
+    EXTRABOLD_HANGUL_ADVANCE_SCALE,
+    STYLE_SPECS,
+    should_expand_hangul_advance,
+    should_keep_ridi_codepoint,
+    transformed_hangul_advance,
+)
 from build_lightweight_microfonts import DEFAULT_FIGURES
 
 
 MAX_EXAMPLES = 50
 FULL_RASTER_PPEM = 64
 REVIEWED_COUNTER_AREA_MINIMA = {"뼮": 0.68}
+SPECIMEN_DIR = Path(__file__).resolve().parents[1] / "specimen"
+MODERN_HANGUL_RUN = re.compile(r"[가-힣]{2,}")
 
 
 def outline_area(glyph_set, glyph_name: str) -> float:
@@ -46,6 +57,29 @@ def summarize(values: list[float]) -> dict[str, float]:
         "ninety_ninth_percentile": percentile(values, 0.99),
         "maximum": max(values),
     }
+
+
+def extract_hangul_bigrams(text: str) -> Counter[str]:
+    bigrams: Counter[str] = Counter()
+    for match in MODERN_HANGUL_RUN.finditer(text):
+        run = match.group()
+        bigrams.update(run[index : index + 2] for index in range(len(run) - 1))
+    return bigrams
+
+
+def specimen_hangul_bigrams(directory: Path = SPECIMEN_DIR) -> Counter[str]:
+    bigrams: Counter[str] = Counter()
+    for path in sorted(directory.glob("*.typ")):
+        bigrams.update(extract_hangul_bigrams(path.read_text(encoding="utf-8")))
+    return bigrams
+
+
+def horizontal_bounds(glyph_set, glyph_name: str) -> tuple[float, float]:
+    pen = BoundsPen(glyph_set)
+    glyph_set[glyph_name].draw(pen)
+    if pen.bounds is None:
+        return (0.0, 0.0)
+    return (float(pen.bounds[0]), float(pen.bounds[2]))
 
 
 def audit(
@@ -109,12 +143,25 @@ def audit(
                 name: fonts[name]["hmtx"][glyph_name][0]
                 for name, glyph_name in glyph_names.items()
             }
-            if len(set(advances.values())) != 1:
+            expected_advances = {
+                "Regular": advances["Regular"],
+                "Bold": advances["Regular"],
+                "ExtraBold": (
+                    transformed_hangul_advance(
+                        advances["Regular"],
+                        STYLE_SPECS["ExtraBold"],
+                    )
+                    if should_expand_hangul_advance(codepoint)
+                    else advances["Regular"]
+                ),
+            }
+            if advances != expected_advances:
                 advance_mismatches.append(
                     {
                         "codepoint": f"U+{codepoint:04X}",
                         "character": chr(codepoint),
                         "advances": advances,
+                        "expected": expected_advances,
                     }
                 )
             if areas["Regular"] > 0 and areas["ExtraBold"] <= 0:
@@ -245,6 +292,27 @@ def audit(
         )
         extra_zero_gap = zero_gap(fonts["ExtraBold"])
 
+        specimen_bigrams = specimen_hangul_bigrams()
+        spacing_rows = []
+        extrabold_font = fonts["ExtraBold"]
+        extrabold_cmap = cmaps["ExtraBold"]
+        extrabold_glyph_set = glyph_sets["ExtraBold"]
+        for pair, occurrences in specimen_bigrams.items():
+            left_name = extrabold_cmap[ord(pair[0])]
+            right_name = extrabold_cmap[ord(pair[1])]
+            _, left_x_max = horizontal_bounds(extrabold_glyph_set, left_name)
+            right_x_min, _ = horizontal_bounds(extrabold_glyph_set, right_name)
+            left_advance = extrabold_font["hmtx"][left_name][0]
+            spacing_rows.append(
+                {
+                    "pair": pair,
+                    "occurrences": occurrences,
+                    "gap": left_advance - left_x_max + right_x_min,
+                }
+            )
+        spacing_rows.sort(key=lambda item: (item["gap"], item["pair"]))
+        nonpositive_spacing = [item for item in spacing_rows if item["gap"] <= 0]
+
         failures = []
         if any(
             difference["missing"] or difference["extra"]
@@ -281,6 +349,8 @@ def audit(
             failures.append("64 ppem counter loss")
         if counter_area_losses:
             failures.append("64 ppem counter area")
+        if nonpositive_spacing:
+            failures.append("nonpositive Hangul spacing")
 
         return {
             "pass": not failures,
@@ -288,6 +358,7 @@ def audit(
             "encoded_codepoints": len(common_codepoints),
             "cjk_codepoints": len(cjk_codepoints),
             "hangul_codepoints": len(hangul_codepoints),
+            "extrabold_hangul_advance_scale": EXTRABOLD_HANGUL_ADVANCE_SCALE,
             "cmap_differences": cmap_differences,
             "hangul_area_ratio": hangul_summary,
             "bold_hangul_area_ratio": bold_summary,
@@ -298,6 +369,17 @@ def audit(
             "mixed_script_difference": script_difference,
             "zero_gaps": {
                 name: zero_gap(font) for name, font in fonts.items()
+            },
+            "hangul_spacing": {
+                "specimen_directory": str(SPECIMEN_DIR),
+                "unique_pairs": len(spacing_rows),
+                "occurrences": sum(specimen_bigrams.values()),
+                "minimum_gap": spacing_rows[0]["gap"],
+                "nonpositive_pair_count": len(nonpositive_spacing),
+                "nonpositive_occurrences": sum(
+                    item["occurrences"] for item in nonpositive_spacing
+                ),
+                "tightest_pairs": spacing_rows[:MAX_EXAMPLES],
             },
             "full_raster_ppem": FULL_RASTER_PPEM,
             "empty_glyph_count": len(empty_glyphs),
@@ -349,6 +431,7 @@ def main() -> None:
         f"Hangul median={report['hangul_area_ratio']['median']:.3f}, "
         f"Latin median={report['latin_area_ratio']['median']:.3f}, "
         f"00 gap={report['zero_gaps']['ExtraBold']:.1f}, "
+        f"Hangul pair gap={report['hangul_spacing']['minimum_gap']:.1f}, "
         f"failures={','.join(report['failures']) or '-'}"
     )
     if not report["pass"]:

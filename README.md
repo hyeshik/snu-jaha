@@ -22,6 +22,13 @@ weight names as direct source-font substitutions.
   fitted to representative Latin glyphs already present in RIDIBatang (`H`,
   `M`, `A`, `I`, `N`, `o`, `x`, `n`, `g`, and `p`) while retaining Roboto
   Serif's internal proportions.
+- Hangul optical geometry: original RIDIBatang outline width, 98.4% vertical
+  scale, and a 24.862-unit upward shift. Regular through Bold retain the source
+  advance. ExtraBold widens visible Hangul advances to 104% and centers each
+  outline in the enlarged cell, preventing the `+30 retain` construction from
+  closing inter-glyph space. Invisible Hangul filler controls retain their
+  source widths. This keeps the adopted Original:Appendard 2:1 baseline
+  adjustment and reviewed optical-size restoration unchanged.
 - CJK punctuation, fullwidth forms, enclosed alphanumerics, and common CJK
   context symbols stay with RIDIBatang.
 - ASCII/general punctuation, Latin and Cyrillic alphabets, figure alternates,
@@ -50,10 +57,12 @@ separately reviewed ExtraBold display extension:
 | ExtraBold | 800 | +30 retain | 633.333 | 93% |
 
 Korean, East Asian context glyphs, and the default figures receive the listed
-FontForge weight offset. Their advance widths are preserved; any glyph whose
-weighting changes its advance is recentered before its original advance is
-restored. Latin and general punctuation use static Roboto Serif instances at
-the listed source coordinates and retain the Regular geometry transform.
+FontForge weight offset. Weighting is first recentered in the original cell.
+Regular through Bold preserve every source advance; ExtraBold then widens only
+Hangul cells to 104% and distributes the added space equally on both sides.
+CJK punctuation and default figures remain fixed. Latin and general
+punctuation use static Roboto Serif instances at the listed source coordinates
+and retain the Regular geometry transform.
 
 The conservative source-weight mapping keeps the approved Bold at 700.
 ExtraBold uses the separately reviewed `+30 retain` construction: it starts
@@ -62,9 +71,11 @@ Bold. Its minimum-size and counter behavior are documented as a display-style
 decision in `WEIGHTS.md`.
 
 The full-font audit checks all 12,656 encoded characters, including all 11,172
-modern Hangul syllables, for missing outlines, advance changes, and
+modern Hangul syllables, for missing outlines, unexpected advance changes, and
 `Thin ≤ Light ≤ Regular` raster-ink order. The ExtraBold audit independently
-checks the complete `Bold < ExtraBold` CJK vector and 64 ppem raster order. The
+checks the intentional 104% Hangul advance, complete `Bold < ExtraBold` CJK
+vector, 64 ppem raster order, and every Hangul bigram found in the specimen
+sources for nonpositive inter-glyph spacing. The
 specimen compares all seven weights, stresses dense Hangul counters and
 figures, and tests academic document hierarchy over five pages and three
 raster resolutions.
@@ -107,6 +118,59 @@ make PYTHON=.venv/bin/python family-specimen
 This creates `dist/SNUJaha-{Thin,Light,Regular,Medium,SemiBold,Bold,ExtraBold}.otf`,
 `proof/SNUJaha-Full-Weight-Range-Specimen.pdf`, and five-page raster proofs at
 96, 144, and 300 dpi.
+
+To compare SNU Jaha with the current SNU Appendard, SNU Edge, and SNU Sprout
+instances under controlled size, weight, and baseline conditions, run:
+
+```sh
+make PYTHON=.venv/bin/python compatibility-specimen
+```
+
+This creates the 11-page `proof/SNU-Family-Compatibility-Specimen.pdf`, a
+machine-readable audit at `build/snu-family-compatibility/audit.json`, exact
+common-baseline raster panels, and 144 dpi page previews. The proof compares
+all four families at their seven shared weights, records reference-glyph and
+line-box metrics, alternates families on a single unshifted baseline, and
+stresses small scientific text, figures, units, punctuation, and document
+hierarchies. The sibling output locations can be overridden with
+`SNU_APPENDARD_DIR`, `SNU_EDGE_DIR`, and `SNU_SPROUT_DIR`.
+
+To build disposable Regular candidates that interpolate each family's original
+Hangul geometry toward SNU Appendard Regular, run:
+
+```sh
+make PYTHON=.venv/bin/python appendard-blend-specimen
+```
+
+This leaves the canonical fonts unchanged and creates twelve uniquely named
+candidate OTFs under `build/appendard-blend/candidates`, the measured geometry
+at `build/appendard-blend/report.json`, exact common-baseline rasters, and the
+comparison proof `proof/SNU-Appendard-Blend-Regular-Candidates.pdf`. For each
+of Jaha, Edge, and Sprout, the original-to-Appendard transform is applied at
+original:Appendard ratios 2:1, 1:1, 1:2, and 0:1. The 0:1 endpoint is each
+family's own full-fit font, not SNU Appendard itself. Latin, figures,
+punctuation, global line metrics, and weight metadata are not transformed.
+
+To measure the Hangul-to-Latin size balance of the selected 2:1 candidates
+against RIDIBatang, NanumSquare Regular, and LINE Seed Sans KR Regular, run:
+
+```sh
+make PYTHON=.venv/bin/python appendard-balance-audit
+```
+
+The normalized outline-height, width, advance, and baseline-position report is
+written to `build/appendard-blend/hangul-latin-balance-2to1.json`.
+
+To build disposable Jaha and Edge candidates that restore the original vertical
+size around the selected 2:1 geometry and audit center-, shift-, and
+bottom-anchored alternatives, run:
+
+```sh
+make PYTHON=.venv/bin/python appendard-size-restore-review
+```
+
+The audit is written to `build/appendard-size-restore/report.json`, with its
+comparison proof at `proof/SNU-Appendard-2to1-Size-Restore-Review.pdf`.
 
 To build the first Bold candidate and its three-page comparison proof, run:
 

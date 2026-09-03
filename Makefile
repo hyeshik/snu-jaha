@@ -45,8 +45,30 @@ EXTRABOLD_AUDIT_DIR := $(BUILD_DIR)/extrabold-audit
 EXTRABOLD_AUDIT := $(EXTRABOLD_AUDIT_DIR)/audit.json
 EXTRABOLD_SPECIMEN := $(PROOF_DIR)/SNUJaha-ExtraBold-Microproof.pdf
 EXTRABOLD_FULL_AUDIT := $(BUILD_DIR)/extrabold-full-audit.json
+SNU_APPENDARD_DIR ?= ../snu-appendard/dist/otf
+SNU_EDGE_DIR ?= ../snu-edge/instance_otf
+SNU_SPROUT_DIR ?= ../snu-sprout/instance_otf
+FAMILY_COMPAT_DIR := $(BUILD_DIR)/snu-family-compatibility
+FAMILY_COMPAT_AUDIT := $(FAMILY_COMPAT_DIR)/audit.json
+FAMILY_COMPAT_RASTER_DIR := $(FAMILY_COMPAT_DIR)/rasters
+FAMILY_COMPAT_SPECIMEN := $(PROOF_DIR)/SNU-Family-Compatibility-Specimen.pdf
+APPENDARD_BLEND_DIR := $(BUILD_DIR)/appendard-blend
+APPENDARD_BLEND_CANDIDATE_DIR := $(APPENDARD_BLEND_DIR)/candidates
+APPENDARD_BLEND_RASTER_DIR := $(APPENDARD_BLEND_DIR)/rasters
+APPENDARD_BLEND_REPORT := $(APPENDARD_BLEND_DIR)/report.json
+APPENDARD_BALANCE_REPORT := $(APPENDARD_BLEND_DIR)/hangul-latin-balance-2to1.json
+APPENDARD_BLEND_SPECIMEN := $(PROOF_DIR)/SNU-Appendard-Blend-Regular-Candidates.pdf
+APPENDARD_RESTORE_DIR := $(BUILD_DIR)/appendard-size-restore
+APPENDARD_RESTORE_CANDIDATE_DIR := $(APPENDARD_RESTORE_DIR)/candidates
+APPENDARD_RESTORE_REPORT := $(APPENDARD_RESTORE_DIR)/report.json
+APPENDARD_RESTORE_SPECIMEN := $(PROOF_DIR)/SNU-Appendard-2to1-Size-Restore-Review.pdf
+SNU_APPENDARD_REGULAR := $(SNU_APPENDARD_DIR)/SNUAppendard-Regular.otf
+SNU_EDGE_REGULAR := $(SNU_EDGE_DIR)/SNUEdge-Regular.otf
+SNU_SPROUT_REGULAR := $(SNU_SPROUT_DIR)/SNUSprout-Regular.otf
+NANUM_SQUARE_REGULAR ?= ../snu-edge/vendor/source/NaverNanumSquare/NanumFontSetup_OTF_SQUARE/NanumSquareR.otf
+LINE_SEED_KR_REGULAR ?= ../snu-sprout/original/LINESeedKR-Rg.otf
 
-.PHONY: all sources build thin-build light-build medium-build semibold-build bold-build extrabold-build full-build verify thin-verify light-verify medium-verify semibold-verify bold-verify extrabold-verify verify-all weight-range-audit extrabold-full-audit specimen bold-specimen weight-specimen lightweight-audit extrabold-audit family-specimen mixed-text-proof test clean
+.PHONY: all sources build thin-build light-build medium-build semibold-build bold-build extrabold-build full-build verify thin-verify light-verify medium-verify semibold-verify bold-verify extrabold-verify verify-all weight-range-audit extrabold-full-audit specimen bold-specimen weight-specimen lightweight-audit extrabold-audit family-specimen compatibility-specimen appendard-blend-specimen appendard-balance-audit appendard-size-restore-review mixed-text-proof test clean
 
 all: specimen
 
@@ -344,6 +366,107 @@ family-specimen: full-build weight-range-audit extrabold-full-audit
 		--font-path "$(DIST_DIR)" \
 		specimen/full-weight-proof.typ "$(PROOF_DIR)/SNUJaha-Full-Weight-Range-300-{p}.png"
 
+compatibility-specimen: full-build
+	mkdir -p "$(FAMILY_COMPAT_DIR)" "$(FAMILY_COMPAT_RASTER_DIR)" "$(PROOF_DIR)"
+	$(PYTHON) scripts/audit_snu_family_compatibility.py \
+		--jaha-dir "$(DIST_DIR)" \
+		--appendard-dir "$(SNU_APPENDARD_DIR)" \
+		--edge-dir "$(SNU_EDGE_DIR)" \
+		--sprout-dir "$(SNU_SPROUT_DIR)" \
+		--output "$(FAMILY_COMPAT_AUDIT)"
+	$(PYTHON) scripts/render_snu_family_baselines.py \
+		--jaha-dir "$(DIST_DIR)" \
+		--appendard-dir "$(SNU_APPENDARD_DIR)" \
+		--edge-dir "$(SNU_EDGE_DIR)" \
+		--sprout-dir "$(SNU_SPROUT_DIR)" \
+		--output-dir "$(FAMILY_COMPAT_RASTER_DIR)"
+	$(TYPST) compile \
+		--root . \
+		--font-path "$(DIST_DIR)" \
+		--font-path "$(SNU_APPENDARD_DIR)" \
+		--font-path "$(SNU_EDGE_DIR)" \
+		--font-path "$(SNU_SPROUT_DIR)" \
+		specimen/snu-family-compatibility-proof.typ "$(FAMILY_COMPAT_SPECIMEN)"
+	$(TYPST) compile --ppi 144 \
+		--root . \
+		--font-path "$(DIST_DIR)" \
+		--font-path "$(SNU_APPENDARD_DIR)" \
+		--font-path "$(SNU_EDGE_DIR)" \
+		--font-path "$(SNU_SPROUT_DIR)" \
+		specimen/snu-family-compatibility-proof.typ "$(PROOF_DIR)/SNU-Family-Compatibility-144-{p}.png"
+
+appendard-blend-specimen: build
+	mkdir -p "$(APPENDARD_BLEND_CANDIDATE_DIR)" "$(APPENDARD_BLEND_RASTER_DIR)" "$(PROOF_DIR)"
+	$(PYTHON) scripts/build_appendard_fit_candidates.py \
+		--jaha "$(OUTPUT)" \
+		--edge "$(SNU_EDGE_REGULAR)" \
+		--sprout "$(SNU_SPROUT_REGULAR)" \
+		--appendard "$(SNU_APPENDARD_REGULAR)" \
+		--output-dir "$(APPENDARD_BLEND_CANDIDATE_DIR)" \
+		--report "$(APPENDARD_BLEND_REPORT)"
+	$(PYTHON) scripts/render_appendard_fit_baselines.py \
+		--jaha "$(OUTPUT)" \
+		--edge "$(SNU_EDGE_REGULAR)" \
+		--sprout "$(SNU_SPROUT_REGULAR)" \
+		--appendard "$(SNU_APPENDARD_REGULAR)" \
+		--candidate-dir "$(APPENDARD_BLEND_CANDIDATE_DIR)" \
+		--output-dir "$(APPENDARD_BLEND_RASTER_DIR)"
+	$(TYPST) compile \
+		--root . \
+		--font-path "$(DIST_DIR)" \
+		--font-path "$(SNU_APPENDARD_DIR)" \
+		--font-path "$(SNU_EDGE_DIR)" \
+		--font-path "$(SNU_SPROUT_DIR)" \
+		--font-path "$(APPENDARD_BLEND_CANDIDATE_DIR)" \
+		specimen/appendard-fit-regular-proof.typ "$(APPENDARD_BLEND_SPECIMEN)"
+	$(TYPST) compile --ppi 144 \
+		--root . \
+		--font-path "$(DIST_DIR)" \
+		--font-path "$(SNU_APPENDARD_DIR)" \
+		--font-path "$(SNU_EDGE_DIR)" \
+		--font-path "$(SNU_SPROUT_DIR)" \
+		--font-path "$(APPENDARD_BLEND_CANDIDATE_DIR)" \
+		specimen/appendard-fit-regular-proof.typ "$(PROOF_DIR)/SNU-Appendard-Blend-Regular-144-{p}.png"
+
+appendard-balance-audit: appendard-blend-specimen
+	$(PYTHON) scripts/measure_hangul_latin_balance.py \
+		--jaha-source sources/ridibatang/RIDIBatang.otf \
+		--jaha "$(OUTPUT)" \
+		--jaha-adjusted "$(APPENDARD_BLEND_CANDIDATE_DIR)/SNUJahaBlend-O2A1-Regular.otf" \
+		--edge-source "$(NANUM_SQUARE_REGULAR)" \
+		--edge "$(SNU_EDGE_REGULAR)" \
+		--edge-adjusted "$(APPENDARD_BLEND_CANDIDATE_DIR)/SNUEdgeBlend-O2A1-Regular.otf" \
+		--sprout-source "$(LINE_SEED_KR_REGULAR)" \
+		--sprout "$(SNU_SPROUT_REGULAR)" \
+		--sprout-adjusted "$(APPENDARD_BLEND_CANDIDATE_DIR)/SNUSproutBlend-O2A1-Regular.otf" \
+		--output "$(APPENDARD_BALANCE_REPORT)"
+
+appendard-size-restore-review: appendard-blend-specimen
+	mkdir -p "$(APPENDARD_RESTORE_CANDIDATE_DIR)" "$(PROOF_DIR)"
+	$(PYTHON) scripts/review_appendard_size_restore.py \
+		--jaha "$(OUTPUT)" \
+		--edge "$(SNU_EDGE_REGULAR)" \
+		--blend-report "$(APPENDARD_BLEND_REPORT)" \
+		--candidate-dir "$(APPENDARD_BLEND_CANDIDATE_DIR)" \
+		--output-dir "$(APPENDARD_RESTORE_CANDIDATE_DIR)" \
+		--report "$(APPENDARD_RESTORE_REPORT)"
+	$(TYPST) compile \
+		--root . \
+		--font-path "$(DIST_DIR)" \
+		--font-path "$(SNU_EDGE_DIR)" \
+		--font-path "$(SNU_APPENDARD_DIR)" \
+		--font-path "$(APPENDARD_BLEND_CANDIDATE_DIR)" \
+		--font-path "$(APPENDARD_RESTORE_CANDIDATE_DIR)" \
+		specimen/appendard-size-restore-review.typ "$(APPENDARD_RESTORE_SPECIMEN)"
+	$(TYPST) compile --ppi 144 \
+		--root . \
+		--font-path "$(DIST_DIR)" \
+		--font-path "$(SNU_EDGE_DIR)" \
+		--font-path "$(SNU_APPENDARD_DIR)" \
+		--font-path "$(APPENDARD_BLEND_CANDIDATE_DIR)" \
+		--font-path "$(APPENDARD_RESTORE_CANDIDATE_DIR)" \
+		specimen/appendard-size-restore-review.typ "$(PROOF_DIR)/SNU-Appendard-2to1-Size-Restore-144-{p}.png"
+
 mixed-text-proof: build
 	mkdir -p "$(PROOF_DIR)"
 	$(TYPST) compile \
@@ -354,4 +477,4 @@ test:
 	$(PYTHON) -m unittest discover -s tests
 
 clean:
-	rm -rf "$(BUILD_DIR)" "$(DIST_DIR)" "$(SPECIMEN)" "$(BOLD_SPECIMEN)" "$(WEIGHT_SPECIMEN)" "$(LIGHTWEIGHT_SPECIMEN)" "$(EXTRABOLD_SPECIMEN)" "$(FULL_WEIGHT_SPECIMEN)" "$(MIXED_TEXT_PROOF)" "$(PROOF_DIR)"/*.png
+	rm -rf "$(BUILD_DIR)" "$(DIST_DIR)" "$(SPECIMEN)" "$(BOLD_SPECIMEN)" "$(WEIGHT_SPECIMEN)" "$(LIGHTWEIGHT_SPECIMEN)" "$(EXTRABOLD_SPECIMEN)" "$(FULL_WEIGHT_SPECIMEN)" "$(FAMILY_COMPAT_SPECIMEN)" "$(APPENDARD_BLEND_SPECIMEN)" "$(MIXED_TEXT_PROOF)" "$(PROOF_DIR)"/*.png

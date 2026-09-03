@@ -121,8 +121,8 @@ the median passes.
 
 ### Geometry and spacing gates
 
-- Preserve every Hangul advance exactly and keep default `0–9` advances at 560
-  units in both styles.
+- Preserve every Hangul advance exactly in Thin and Light, and keep default
+  `0–9` advances at 560 units in both styles.
 - Keep digit-to-digit kerning at zero. Repeated-figure spacing must be repaired
   inside the common tabular cell, not with pair positioning.
 - Target an outline `00` gap of `78 ± 3` units for Light and `90 ± 5` units for
@@ -343,10 +343,14 @@ glyph identity. That review promotes only this construction to Stage 2.
 ### Stage 2 full-font result
 
 The approved construction starts again from RIDIBatang Regular, applies `+30`
-with `retain` counter behavior to all 11,805 eligible source glyphs, recenters
-every changed outline in its original advance, and applies a 0.93 horizontal
-correction to the default figures. It is merged with the transformed Roboto
-Serif `wght 633.333` instance and published as ExtraBold 800.
+with `retain` counter behavior to all 11,805 eligible source glyphs, and first
+recenters every changed outline in its original advance. Modern Hangul and
+Hangul jamo cells are then widened to 104%, with the additional space divided
+equally between the two sidebearings. Invisible Hangul filler controls and CJK
+punctuation remain at their source advances, and the default figures keep their
+560-unit tabular cells with a 0.93 horizontal outline correction. The result is
+merged with the transformed
+Roboto Serif `wght 633.333` instance and published as ExtraBold 800.
 
 | Measure | Full ExtraBold result |
 |---|---:|
@@ -359,12 +363,22 @@ Serif `wght 633.333` instance and published as ExtraBold 800.
 | Median Latin separation from Bold | 0.071 |
 | Hangul/Latin median difference | 0.011 |
 | `00` gap | 50 units |
+| Hangul advance scale | 1.04 |
+| Minimum specimen Hangul-pair gap | 3.1 units |
 
-The complete audit found no cmap difference, newly empty CJK glyph, CJK or
-figure advance mismatch, vector-area reversal, or 64 ppem raster-ink reversal
-between Bold and ExtraBold. Every modern Hangul syllable is strictly darker in
-both vector area and 64 ppem raster ink. The generated CFF and merged font retain
-the same validation masks as the corresponding accepted family stages.
+The complete audit found no cmap difference, newly empty CJK glyph, unexpected
+advance change, vector-area reversal, or 64 ppem raster-ink reversal between
+Bold and ExtraBold. The intentional Hangul cell expansion changes the median
+modern-syllable advance from 943 to 981 units; figures and other CJK glyphs do
+not expand. Every modern Hangul syllable is strictly darker in both vector area
+and 64 ppem raster ink. The generated CFF and merged font retain the same
+validation masks as the corresponding accepted family stages.
+
+At the former 943-unit Hangul advance, 617 of the 1,518 unique Hangul bigrams
+collected from the specimen sources had a nonpositive outline gap. The widened
+981-unit cell leaves all 1,518 pairs positive across 4,453 occurrences; the
+tightest measured gap is 3.1 units. This is an ExtraBold spacing correction,
+not a general proportional-width policy for the lighter styles.
 
 The full-font rounding adds one small-size counter record (`뾂` at 48 ppem) to
 the two Stage 1 records (`뼒` at 24 ppem and `뺄` at 32 ppem); none loses a

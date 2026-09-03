@@ -18,6 +18,14 @@ LATIN_X_SCALE = 0.895
 LATIN_Y_SCALE = 0.936
 LATIN_Y_SHIFT = -11.0
 
+# The family compatibility proof selected a conservative optical restoration
+# after moving the Hangul baseline two-thirds of the way toward SNU Appendard.
+# Keep the original RIDIBatang width and advance, reduce only the vertical
+# outline size, and retain the reviewed baseline shift.
+HANGUL_Y_SCALE = 0.984
+HANGUL_Y_SHIFT = 24.8622817344205
+EXTRABOLD_HANGUL_ADVANCE_SCALE = 1.04
+
 
 @dataclass(frozen=True)
 class StyleSpec:
@@ -120,6 +128,15 @@ PRIVATE_USE_RANGES = (
     (0x100000, 0x10FFFD),
 )
 
+HANGUL_CODEPOINT_RANGES = (
+    (0x1100, 0x11FF),
+    (0x3130, 0x318F),
+    (0xA960, 0xA97F),
+    (0xAC00, 0xD7A3),
+    (0xD7B0, 0xD7FF),
+)
+HANGUL_FILLER_CODEPOINTS = frozenset((0x115F, 0x1160, 0x3164))
+
 
 @contextlib.contextmanager
 def suppress_c_stderr(enabled: bool) -> Iterator[None]:
@@ -153,8 +170,29 @@ def should_keep_ridi_codepoint(codepoint: int) -> bool:
     )
 
 
+def is_hangul_codepoint(codepoint: int) -> bool:
+    return in_ranges(codepoint, HANGUL_CODEPOINT_RANGES)
+
+
+def should_expand_hangul_advance(codepoint: int) -> bool:
+    return (
+        is_hangul_codepoint(codepoint)
+        and codepoint not in HANGUL_FILLER_CODEPOINTS
+    )
+
+
 def transformed_advance(width: float, scale: float = LATIN_X_SCALE) -> int:
     return round(width * scale)
+
+
+def hangul_advance_scale(style: StyleSpec) -> float:
+    if style.name == "ExtraBold":
+        return EXTRABOLD_HANGUL_ADVANCE_SCALE
+    return 1.0
+
+
+def transformed_hangul_advance(width: float, style: StyleSpec) -> int:
+    return round(width * hangul_advance_scale(style))
 
 
 def flatten_cid_font(font, quiet: bool) -> bool:
@@ -191,6 +229,28 @@ def remove_cjk_from_latin(font) -> int:
             font.removeGlyph(glyph)
             removed += 1
     return removed
+
+
+def transform_hangul(font, style: StyleSpec) -> int:
+    changed = 0
+    for glyph in list(font.glyphs()):
+        if not is_hangul_codepoint(glyph.unicode):
+            continue
+        if glyph.references:
+            glyph.unlinkRef()
+        original_advance = glyph.width
+        new_advance = (
+            transformed_hangul_advance(original_advance, style)
+            if should_expand_hangul_advance(glyph.unicode)
+            else original_advance
+        )
+        x_shift = (new_advance - original_advance) / 2
+        glyph.transform(
+            (1, 0, 0, HANGUL_Y_SCALE, x_shift, HANGUL_Y_SHIFT)
+        )
+        glyph.width = new_advance
+        changed += 1
+    return changed
 
 
 def transform_latin(font) -> int:
@@ -292,6 +352,7 @@ def build(
         base.reencode("unicode")
         removed_lookups = remove_layout_lookups(base)
         ridi_removed = remove_non_cjk_glyphs(base)
+        hangul_transformed = transform_hangul(base, style)
         with suppress_c_stderr(quiet):
             base.mergeFonts(str(transformed_latin))
         rewrite_metadata(base, style)
@@ -306,6 +367,10 @@ def build(
         f"{output}: style={style.name}, cid_flattened={flattened}, "
         f"ridi_non_cjk_removed={ridi_removed}, "
         f"ridi_lookups_removed={removed_lookups}, "
+        f"hangul_transformed={hangul_transformed}, "
+        f"hangul_transform=(1.000,{HANGUL_Y_SCALE:.3f},centered,"
+        f"{HANGUL_Y_SHIFT:.3f}), "
+        f"hangul_advance_scale={hangul_advance_scale(style):.3f}, "
         f"roboto_cjk_removed={latin_cjk_removed}, "
         f"roboto_glyphs_transformed={latin_changed}, "
         f"latin_transform=({LATIN_X_SCALE:.3f},{LATIN_Y_SCALE:.3f},"

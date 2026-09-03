@@ -13,6 +13,7 @@ import build_ridi_weight as weight_builder
 import build_lightweight_microfonts as lightweight_builder
 import build_extrabold_microfonts as extrabold_builder
 import audit_lightweight_candidates as lightweight_audit
+import audit_extrabold_full as full_extrabold_audit
 import instantiate_roboto_serif as roboto_instancer
 
 
@@ -43,6 +44,44 @@ class BuildJahaPolicyTests(unittest.TestCase):
         for codepoint in (0x1100, 0x3131, 0x3001, 0xAC00, 0xD7A3, 0xFF01):
             with self.subTest(codepoint=codepoint):
                 self.assertTrue(builder.should_keep_ridi_codepoint(codepoint))
+
+    def test_hangul_optical_restore_matches_reviewed_geometry(self) -> None:
+        self.assertEqual(builder.HANGUL_Y_SCALE, 0.984)
+        self.assertAlmostEqual(builder.HANGUL_Y_SHIFT, 24.8622817344205)
+        for codepoint in (0x1100, 0x3131, 0xA960, 0xAC00, 0xD7A3, 0xD7B0):
+            with self.subTest(codepoint=codepoint):
+                self.assertTrue(builder.is_hangul_codepoint(codepoint))
+        for codepoint in (0x0041, 0x3001, 0x4E00, 0xD7A4):
+            with self.subTest(codepoint=codepoint):
+                self.assertFalse(builder.is_hangul_codepoint(codepoint))
+        for codepoint in (0x115F, 0x1160, 0x3164):
+            with self.subTest(codepoint=codepoint):
+                self.assertFalse(builder.should_expand_hangul_advance(codepoint))
+        for codepoint in (0x1100, 0x3131, 0xAC00, 0xD7A3):
+            with self.subTest(codepoint=codepoint):
+                self.assertTrue(builder.should_expand_hangul_advance(codepoint))
+
+    def test_extrabold_hangul_advance_is_widened(self) -> None:
+        self.assertEqual(builder.EXTRABOLD_HANGUL_ADVANCE_SCALE, 1.04)
+        self.assertEqual(
+            builder.hangul_advance_scale(builder.STYLE_SPECS["Regular"]),
+            1.0,
+        )
+        self.assertEqual(
+            builder.hangul_advance_scale(builder.STYLE_SPECS["Bold"]),
+            1.0,
+        )
+        self.assertEqual(
+            builder.hangul_advance_scale(builder.STYLE_SPECS["ExtraBold"]),
+            1.04,
+        )
+        self.assertEqual(
+            builder.transformed_hangul_advance(
+                943,
+                builder.STYLE_SPECS["ExtraBold"],
+            ),
+            981,
+        )
 
     def test_latin_and_general_punctuation_come_from_roboto(self) -> None:
         for codepoint in (0x0041, 0x0061, 0x0030, 0x00E9, 0x201C, 0x20A9):
@@ -157,6 +196,16 @@ class BuildJahaPolicyTests(unittest.TestCase):
             candidates[(36, "auto")].figure_x_scale,
             0.916,
         )
+
+    def test_extrabold_spacing_corpus_extracts_modern_hangul_pairs(self) -> None:
+        pairs = full_extrabold_audit.extract_hangul_bigrams(
+            "연구환경 Research 24 h, 식물환경"
+        )
+        self.assertEqual(pairs["연구"], 1)
+        self.assertEqual(pairs["구환"], 1)
+        self.assertEqual(pairs["환경"], 2)
+        self.assertEqual(pairs["식물"], 1)
+        self.assertEqual(pairs["물환"], 1)
 
     def test_only_reviewed_jamo_separations_are_exempted(self) -> None:
         reviewed = {"character": "뿳", "regular": 5, "candidate": 6}
