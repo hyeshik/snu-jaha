@@ -109,7 +109,7 @@
 
 #v(8mm)
 #box(width: 100%, inset: 5mm, radius: 1.6mm, stroke: 0.5pt + rule)[
-  #eyebrow[TABULAR FIGURES / 560 UNITS THROUGHOUT]
+  #eyebrow[TABULAR FIGURES / 520 UNITS THROUGHOUT]
   #v(2mm)
   #grid(
     columns: (auto, 1fr),

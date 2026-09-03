@@ -61,7 +61,7 @@
     #v(5mm)
     #text(size: 10pt, fill: gray)[
       장문 독서와 연구 문서를 위한 한글·라틴 세리프 조합입니다.
-      첫 프로토타입은 Regular 한 굵기로 시작합니다.
+      일곱 굵기와 native italic을 갖춘 14개 정적 스타일로 완성했습니다.
     ]
   ],
   [
@@ -69,7 +69,7 @@
     #v(2.5mm)
     #chip("LATIN", "Roboto Serif 14pt")
     #v(2.5mm)
-    #chip("BUILD", "OpenType/CFF · Regular")
+    #chip("BUILD", "OpenType/CFF · 7 weights × 2 postures")
   ],
 )
 
@@ -145,7 +145,7 @@
     #v(2mm)
     #text(size: 20pt)[0123456789]
     #v(1mm)
-    #text(size: 9pt, fill: gray)[RIDIBatang 원본 · 560-unit tabular lining figures]
+    #text(size: 9pt, fill: gray)[RIDIBatang 윤곽 · 520-unit tabular lining figures]
   ],
   [
     #eyebrow[OLDSTYLE / ONUM]
@@ -223,7 +223,7 @@
   #grid(
     columns: (1fr, 1fr, 1fr),
     column-gutter: 9mm,
-    [#eyebrow[GEOMETRY] #v(1.5mm) #text(size: 11pt)[Latin width × 0.895] ],
+    [#eyebrow[GEOMETRY] #v(1.5mm) #text(size: 11pt)[Roboto wdth 91 · outline × 0.895 · advance × 0.889] ],
     [#eyebrow[VERTICAL ALIGN] #v(1.5mm) #text(size: 11pt)[height × 0.936 · shift −11] ],
     [#eyebrow[FIGURE POLICY] #v(1.5mm) #text(size: 11pt)[RIDI default 0–9 · Roboto alternates] ],
   )

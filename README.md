@@ -2,23 +2,26 @@
 
 SNU Jaha is an OpenType/CFF serif prototype for Korean research and long-form
 reading. Its name comes from Jahayeon (자하연) at Seoul National University.
-The Regular build keeps Korean and East Asian glyphs from RIDIBatang and
-replaces Latin, Cyrillic, and general punctuation with Roboto Serif 14pt
-Regular. Default `0–9` figures come from RIDIBatang for restrained academic
-number setting. The complete seven-style range adds Thin, Light, Medium,
-SemiBold, Bold, and ExtraBold with measured source weights rather than treating
-weight names as direct source-font substitutions.
+The family keeps Korean and East Asian glyphs from RIDIBatang and replaces
+Latin, Cyrillic, and general punctuation with Roboto Serif 14pt. Upright and
+native italic postures are supplied at seven measured weights. Upright `0–9`
+figures come from RIDIBatang for restrained academic number setting. Italic
+styles retain Roboto Serif's native italic figures so numbers and Latin text
+share one posture and rhythm.
 
 ## Design decisions
 
 - Korean base: RIDIBatang 1.0.1, including all 11,172 modern Hangul syllables.
-- Latin source: Roboto Serif v1.008 at a 14pt optical size.
-- Default figures: RIDIBatang lining, tabular `0–9`, each with a 560-unit
-  advance in every style. Weighted outlines are corrected within that fixed
-  cell; Roboto Serif numeral alternates remain available through explicit
-  OpenType features.
-- Latin geometry: 89.5% horizontal scale, 93.6% vertical scale, and an 11-unit
-  downward shift in the 1000 UPM coordinate system. This common transform is
+- Latin source: Roboto Serif v1.008 upright and native italic at a 14pt optical
+  size and `wdth=91`.
+- Default figures: upright styles use RIDIBatang lining, tabular `0–9`,
+  horizontally reduced with their cells from 560 to 520 units. Weighted
+  outlines are corrected before that common reduction. Italic styles keep the
+  transformed Roboto Serif italic defaults at 498 units, together with their
+  original `lnum`, `onum`, `pnum`, `tnum`, and related substitutions.
+- Latin geometry: 89.5% horizontal outline scale, 88.9% advance scale, 93.6%
+  vertical scale, and an 11-unit downward shift in the 1000 UPM coordinate
+  system. Each outline is centered in its separately scaled advance. This transform is
   fitted to representative Latin glyphs already present in RIDIBatang (`H`,
   `M`, `A`, `I`, `N`, `o`, `x`, `n`, `g`, and `p`) while retaining Roboto
   Serif's internal proportions.
@@ -33,11 +36,25 @@ weight names as direct source-font substitutions.
   context symbols stay with RIDIBatang.
 - ASCII/general punctuation, Latin and Cyrillic alphabets, figure alternates,
   and the Roboto Serif GSUB/GPOS features come from Roboto Serif.
-- Roboto Serif kerning values are scaled with the Latin geometry.
-- Hyphen, en dash, and em dash use figure-specific optical kerning before
-  RIDIBatang's default digits; the mathematical minus sign remains unkerned.
-- Family, style, full, and PostScript names are rewritten for the seven
-  `SNU Jaha` styles.
+- Roboto Serif kerning values are scaled by 89.5% with the Latin outlines.
+- Italic Latin and figure terminals and upright Hangul are grouped by their
+  measured right overhang and left sidebearing. A final `kern` lookup
+  guarantees at least 30 units of optical clearance for every class pair. Its
+  input set starts from all encoded non-CJK letters and numbers and follows
+  GSUB outputs, so `f` ligatures, numeral alternates, `T`, `K`, `V`, `W`, `Y`,
+  and other potential overhangs are covered.
+- Uppercase `A` and its accented, `AE`, and Cyrillic relatives have their
+  crossbar/stem overlaps merged into continuous outlines, preventing white
+  seams in heavy weights and small raster sizes.
+- Seven Roboto arrow symbols whose source interpolation reverses below Regular
+  at `wdth=91` keep their Regular outlines in Thin and Light. This prevents a
+  lighter style from rendering darker than the following style.
+- In upright styles, hyphen, en dash, and em dash use figure-specific optical
+  kerning before RIDIBatang's default digits. Italic styles retain Roboto
+  Serif's native dash-to-figure spacing. The mathematical minus sign remains
+  unkerned in both postures.
+- Family, style, full, and PostScript names are rewritten for all fourteen
+  `SNU Jaha` styles, with correct italic and Bold Italic linking bits.
 
 ## Complete weight range
 
@@ -56,13 +73,16 @@ separately reviewed ExtraBold display extension:
 | Bold | 700 | +24 | 600 | 94.4% |
 | ExtraBold | 800 | +30 retain | 633.333 | 93% |
 
-Korean, East Asian context glyphs, and the default figures receive the listed
-FontForge weight offset. Weighting is first recentered in the original cell.
+Korean, East Asian context glyphs, and the upright default figures receive the
+listed FontForge weight offset. Weighting is first recentered in the original cell.
 Regular through Bold preserve every source advance; ExtraBold then widens only
 Hangul cells to 104% and distributes the added space equally on both sides.
-CJK punctuation and default figures remain fixed. Latin and general
-punctuation use static Roboto Serif instances at the listed source coordinates
-and retain the Regular geometry transform.
+CJK punctuation remains fixed. Upright default figures finish in a common
+520-unit cell. Italic default figures come from the corresponding Roboto Serif
+instance and finish at 498 units after the Latin advance transform. Latin and
+general punctuation use static upright or native italic Roboto Serif instances
+at `wdth=91` and the listed weight coordinates, then retain the Regular
+geometry transform.
 
 The conservative source-weight mapping keeps the approved Bold at 700.
 ExtraBold uses the separately reviewed `+30 retain` construction: it starts
@@ -76,9 +96,11 @@ modern Hangul syllables, for missing outlines, unexpected advance changes, and
 checks the intentional 104% Hangul advance, complete `Bold < ExtraBold` CJK
 vector, 64 ppem raster order, and every Hangul bigram found in the specimen
 sources for nonpositive inter-glyph spacing. The
-specimen compares all seven weights, stresses dense Hangul counters and
-figures, and tests academic document hierarchy over five pages and three
-raster resolutions.
+upright specimen compares all seven weights, stresses dense Hangul counters,
+figures, and the repaired capital-A junction, and tests hierarchy over six
+pages and three raster resolutions. A separate four-page italic proof covers
+the complete posture range, mixed scientific text, and Latin-to-Hangul risk
+boundaries.
 
 See `WEIGHTS.md` for measured ink areas, tabular-figure spacing, role
 assignments, and the comparison with a stronger alternative Bold.
@@ -92,7 +114,7 @@ evidence for any future spacing, punctuation, or optical-size refinement.
 Requirements:
 
 - FontForge with Python scripting support
-- Python 3, fontTools, Pillow, and NumPy
+- Python 3, fontTools, Pillow, NumPy, and uharfbuzz
 - Typst for the specimen
 - `curl`, `sha256sum`, and `unzip`
 
@@ -109,15 +131,25 @@ This creates:
 - `dist/SNUJaha-Regular.otf`
 - `proof/SNUJaha-Regular-Specimen.pdf`
 
-To build and verify all seven static styles and the complete proof, run:
+To build all seven weights in upright and italic and create both family proofs,
+run:
 
 ```sh
 make PYTHON=.venv/bin/python family-specimen
+make PYTHON=.venv/bin/python italic-specimen
 ```
 
-This creates `dist/SNUJaha-{Thin,Light,Regular,Medium,SemiBold,Bold,ExtraBold}.otf`,
-`proof/SNUJaha-Full-Weight-Range-Specimen.pdf`, and five-page raster proofs at
-96, 144, and 300 dpi.
+This creates fourteen fonts named
+`dist/SNUJaha-{Thin,Light,Regular,Medium,SemiBold,Bold,ExtraBold}{,Italic}.otf`,
+the six-page upright `proof/SNUJaha-Full-Weight-Range-Specimen.pdf`, and the
+four-page `proof/SNUJaha-Italic-Family-Specimen.pdf`. The italic target also
+writes `build/italic-cjk-guard-audit.json` and 144 dpi page previews.
+
+The Latin-to-Hangul guard is OpenType pair positioning and therefore operates
+inside one shaping run. Applications that split an italic Latin span and the
+following upright Korean into separate runs cannot apply cross-run kerning;
+when the mixed phrase itself is set in SNU Jaha Italic, its Hangul remains
+visually upright and the guard is active.
 
 To compare SNU Jaha with the current SNU Appendard, SNU Edge, and SNU Sprout
 instances under controlled size, weight, and baseline conditions, run:
@@ -134,6 +166,21 @@ line-box metrics, alternates families on a single unshifted baseline, and
 stresses small scientific text, figures, units, punctuation, and document
 hierarchies. The sibling output locations can be overridden with
 `SNU_APPENDARD_DIR`, `SNU_EDGE_DIR`, and `SNU_SPROUT_DIR`.
+
+To compare the production Roboto Serif Regular with a disposable Charis 7.000
+Regular Latin replacement, run:
+
+```sh
+make PYTHON=.venv/bin/python charis-regular-comparison
+```
+
+This downloads and verifies the official Charis 7.000 archive, builds the
+candidate as the separately installable `SNU Jaha Latin Alt` family, audits
+all 11,172 modern Hangul syllables and the production default figures for
+identity, and creates
+`proof/SNUJaha-Roboto-Charis-Regular-Comparison.pdf`. The candidate preserves
+Charis's native horizontal proportions and applies only a 100.5% vertical
+scale with a 7-unit downward shift. It does not replace any production font.
 
 To build disposable Regular candidates that interpolate each family's original
 Hangul geometry toward SNU Appendard Regular, run:
@@ -238,8 +285,11 @@ make PYTHON=.venv/bin/python verify-all
 
 The output audits check CFF format, UPM, style flags, weight and embedding
 metadata, full modern Hangul coverage, representative Latin/Cyrillic coverage,
-figure dimensions and advances, family names, and the expected Roboto Serif
-layout features.
+figure source, dimensions, and advances, family names, and the expected Roboto
+Serif layout features. `make italic-guard-audit` additionally checks every
+measured letter/figure-to-Hangul geometry-class pair and shapes representative
+`f`, `ff`, `fi`, `fl`, `T`, `K`, `V`, `W`, `Y`, lowercase, and figure risk
+boundaries in every weight.
 
 ## Sources and licensing
 

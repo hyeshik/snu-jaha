@@ -1,5 +1,10 @@
 # Weight development
 
+All published Roboto Serif instances use `opsz=14` and `wdth=91`. Their
+outlines are scaled horizontally by 0.895 and centered in advances scaled by
+0.889. The `wght`
+coordinates below describe the remaining family progression.
+
 ## Candidate A
 
 The first four-style range preserves the approved Bold as the upper bound and
@@ -24,23 +29,26 @@ normalized percentages; the useful signal is the progression across each row.
 
 | Glyph | Regular | Medium | SemiBold | Bold |
 |---|---:|---:|---:|---:|
-| 한 | 240,642 | 269,017 | 297,726 | 326,742 |
-| 흙 | 273,953 | 309,318 | 345,098 | 381,228 |
-| H | 166,344 | 196,096 | 223,029 | 240,648 |
-| M | 207,449 | 237,217 | 265,181 | 291,983 |
-| n | 109,876 | 128,164 | 145,708 | 161,805 |
-| g | 160,278 | 182,118 | 202,097 | 219,054 |
+| 한 | 236,791 | 264,713 | 292,963 | 321,514 |
+| 흙 | 269,569 | 304,370 | 339,576 | 375,129 |
+| H | 165,754 | 191,204 | 217,771 | 242,940 |
+| M | 204,463 | 232,087 | 259,987 | 285,591 |
+| n | 108,512 | 125,786 | 142,789 | 159,312 |
+| g | 157,247 | 177,167 | 196,692 | 215,673 |
 
 The Hangul steps are close to linear in absolute ink area. Latin also remains
 visibly progressive; `H` has a smaller final increment, but the broader sample
 and the mixed-text proof keep SemiBold and Bold distinct.
 
-## Tabular figures
+## Upright tabular figures
 
-All default digits retain a 560-unit advance in every style and have no
-digit-to-digit pair kerning. Horizontal outline correction offsets the outward
-growth caused by synthetic weighting. The visible `00` gap progresses from 72
-units in Regular to 66, 60, and 54 units in Medium, SemiBold, and Bold.
+All upright default digits finish at a 520-unit advance in every style and have
+no digit-to-digit pair kerning. Horizontal outline correction first offsets the
+outward growth caused by synthetic weighting; the selected B treatment then
+reduces each RIDIBatang outline and its tabular cell together by 520/560. The
+visible `00` gap progresses from 66 units in Regular to 60, 56, and 50 units in
+Medium, SemiBold, and Bold. Italic styles instead retain Roboto Serif's native
+italic tabular defaults at a 498-unit transformed advance.
 
 ## Roles
 
@@ -121,8 +129,9 @@ the median passes.
 
 ### Geometry and spacing gates
 
-- Preserve every Hangul advance exactly in Thin and Light, and keep default
-  `0–9` advances at 560 units in both styles.
+- Preserve every Hangul advance exactly in Thin and Light. The historical
+  candidate review used 560-unit default figures; production applies the later
+  selected 520-unit B treatment uniformly after weighting.
 - Keep digit-to-digit kerning at zero. Repeated-figure spacing must be repaired
   inside the common tabular cell, not with pair positioning.
 - Target an outline `00` gap of `78 ± 3` units for Light and `90 ± 5` units for
@@ -221,9 +230,9 @@ including all 11,172 modern Hangul syllables.
 
 | Style | RIDI construction | Roboto `wght` | Hangul median | Hangul p1 | `00` gap |
 |---|---:|---:|---:|---:|---:|
-| Thin 100 | −20 auto | 200 | 0.704 | 0.684 | 92 |
-| Light 300 | −6 auto | 333.333 | 0.911 | 0.904 | 78 |
-| Regular 400 | source | 400 | 1.000 | 1.000 | 72 |
+| Thin 100 | −20 auto | 200 | 0.704 | 0.684 | 84 |
+| Light 300 | −6 auto | 333.333 | 0.911 | 0.904 | 72 |
+| Regular 400 | source | 400 | 1.000 | 1.000 | 66 |
 
 The complete encoded audit found no missing or newly empty glyph, no CJK or
 figure advance mismatch, no sentinel ordering failure, and no 256 ppem raster
@@ -347,9 +356,9 @@ with `retain` counter behavior to all 11,805 eligible source glyphs, and first
 recenters every changed outline in its original advance. Modern Hangul and
 Hangul jamo cells are then widened to 104%, with the additional space divided
 equally between the two sidebearings. Invisible Hangul filler controls and CJK
-punctuation remain at their source advances, and the default figures keep their
-560-unit tabular cells with a 0.93 horizontal outline correction. The result is
-merged with the transformed
+punctuation remain at their source advances. Default figures receive the 0.93
+weight-stage outline correction and then the family-wide 520/560 outline/cell
+reduction. The result is merged with the transformed
 Roboto Serif `wght 633.333` instance and published as ExtraBold 800.
 
 | Measure | Full ExtraBold result |
@@ -362,7 +371,7 @@ Roboto Serif `wght 633.333` instance and published as ExtraBold 800.
 | Median Latin area / Regular | 1.498 |
 | Median Latin separation from Bold | 0.071 |
 | Hangul/Latin median difference | 0.011 |
-| `00` gap | 50 units |
+| `00` gap | 46 units |
 | Hangul advance scale | 1.04 |
 | Minimum specimen Hangul-pair gap | 3.1 units |
 
@@ -389,8 +398,30 @@ lower ratios or any 64 ppem counter disappearance remain failures.
 
 ExtraBold is intended for primary titles, covers, and high-impact numeric
 results from 18 pt upward. Its 10–14 pt rows remain diagnostic and do not make
-it a body-text weight. The completed seven-style family adds:
+it a body-text weight. The completed seven-weight range adds:
 
 | Style | Role |
 |---|---|
 | ExtraBold 800 | strong display titles and key figures from 18 pt |
+
+## Native italic range
+
+Each published weight also has a native Roboto Serif italic counterpart at the
+same `opsz=14`, `wdth=91`, and `wght` coordinate. The Latin outline, advance,
+vertical fit, and kerning scale follow the corresponding upright style. Default
+italic figures come from the same Roboto Serif instance at a 498-unit advance;
+Hangul remains the upright RIDIBatang-derived construction.
+
+Italic-to-Hangul spacing is derived after the final transforms. The build
+collects every encoded non-CJK letter and number, follows GSUB single
+substitutions, alternates, and ligatures to their terminal glyphs, and groups
+their right overhangs in 5-unit classes. Upright Hangul left sidebearings are
+grouped the same way. A final class-pair `kern` lookup supplies a 20-unit
+minimum guard and increases it where needed to guarantee 30 units of optical
+outline clearance. The seven-font audit covers every resulting letter and
+figure terminal, all retained Hangul glyphs, and shaped `f`, `ff`, `fi`, `fl`,
+`T`, `K`, `V`, `W`, `Y`, `J`, `j`, `r`, `t`, `x`, `z`, and default-figure
+boundaries. Across the seven weights, the
+italic representative-Latin median ink ratio is 0.9856–0.9944 of upright; the
+mapped `H` and `x` tops differ by less than 0.004 units. All Hangul advances
+and reviewed Hangul geometry samples remain identical between postures.

@@ -16,7 +16,7 @@
   fill: paper,
   header: context align(right)[
     #text(size: 6.6pt, tracking: 0.08em, fill: gray)[
-      SNU JAHA · COMPLETE SEVEN-WEIGHT RANGE
+      SNU JAHA · COMPLETE SEVEN-WEIGHT UPRIGHT RANGE
     ]
   ],
   footer: context [
@@ -24,7 +24,7 @@
     #v(1.6mm)
     #grid(
       columns: (1fr, auto),
-      text(size: 6.6pt, fill: gray)[RIDI −20/−6/+0/+8/+16/+24/+30R · ROBOTO 200/333/400/467/533/600/633],
+      text(size: 6.6pt, fill: gray)[RIDI −20/−6/+0/+8/+16/+24/+30R · ROBOTO W91 · X .895 · A .889],
       text(size: 7pt, fill: accent)[#counter(page).display("01")],
     )
   ],
@@ -75,24 +75,24 @@
     column-gutter: 6mm,
     [#eyebrow[FULL HANGUL] #v(1mm) #text(size: 10.5pt, weight: 500)[11,172 / 11,172]],
     [#eyebrow[ENCODED ORDER] #v(1mm) #text(size: 10.5pt, weight: 500)[12,656 PASS]],
-    [#eyebrow[FIGURE GAPS] #v(1mm) #text(size: 10.5pt, weight: 500)[92 · 78 · 72 · 54 · 50]],
+    [#eyebrow[FIGURE GAPS] #v(1mm) #text(size: 10.5pt, weight: 500)[84 · 72 · 66 · 60 · 56 · 50 · 46]],
   )
 ]
 
 #v(7mm)
-#range-row([THIN 100], 100, [RIDI −20 · Roboto 200], [18 pt 이상 display])
+#range-row([THIN 100], 100, [RIDI −20 · Roboto W91/200], [18 pt 이상 display])
 #v(2.8mm)
-#range-row([LIGHT 300], 300, [RIDI −6 · Roboto 333], [도입 · 보조 본문])
+#range-row([LIGHT 300], 300, [RIDI −6 · Roboto W91/333], [도입 · 보조 본문])
 #v(2.8mm)
-#range-row([REGULAR 400], 400, [RIDI +0 · Roboto 400], [연속 본문])
+#range-row([REGULAR 400], 400, [RIDI +0 · Roboto W91/400], [연속 본문])
 #v(2.8mm)
-#range-row([MEDIUM 500], 500, [RIDI +8 · Roboto 467], [완만한 강조])
+#range-row([MEDIUM 500], 500, [RIDI +8 · Roboto W91/467], [완만한 강조])
 #v(2.8mm)
-#range-row([SEMIBOLD 600], 600, [RIDI +16 · Roboto 533], [절 제목 · 핵심 수치])
+#range-row([SEMIBOLD 600], 600, [RIDI +16 · Roboto W91/533], [절 제목 · 핵심 수치])
 #v(2.8mm)
-#range-row([BOLD 700], 700, [RIDI +24 · Roboto 600], [문서 제목])
+#range-row([BOLD 700], 700, [RIDI +24 · Roboto W91/600], [문서 제목])
 #v(2.8mm)
-#range-row([EXTRABOLD 800], 800, [RIDI +30 retain · Roboto 633], [강한 display 제목])
+#range-row([EXTRABOLD 800], 800, [RIDI +30 retain · Roboto W91/633], [강한 display 제목])
 
 #v(6mm)
 #line(length: 100%, stroke: 0.5pt + rule)
@@ -235,7 +235,7 @@
 // Page 4 — figures, punctuation, hierarchy
 #title(
   [숫자·구두점·문서 위계],
-  note: [고정폭 RIDIBatang 숫자와 dash optical kerning을 일곱 굵기에서 반복하고, 실제 학술 문서 역할을 조합합니다.],
+  note: [이 upright proof의 기본 U+0030–0039는 고정폭 RIDIBatang 숫자입니다. italic 기본 숫자는 별도 italic proof에서 Roboto Serif로 확인합니다.],
 )
 
 #v(3mm)
@@ -351,7 +351,57 @@
   #v(2mm)
   #text(size: 8.7pt)[
     12,656 encoded characters · 11,172 modern Hangul · median advance 943→981 · unexpected mismatch 0 ·
-    minimum pair gap #unit(extrabold-audit.at("hangul_spacing").at("minimum_gap")) units · Bold→ExtraBold vector/raster reversal 0 · 00 gap 50 units. `뼮`의 64 ppem
+    minimum pair gap #unit(extrabold-audit.at("hangul_spacing").at("minimum_gap")) units · Bold→ExtraBold vector/raster reversal 0 · 00 gap 46 units. `뼮`의 64 ppem
     counter 면적 69.2%는 microproof에서 확인한 반올림 경계 사례로 기록했습니다.
   ]
+]
+
+#pagebreak()
+
+// Page 6 — capital A overlap regression
+#title(
+  [A 접합부: 연속된 외곽선],
+  note: [가로획과 사선 획의 겹침을 하나의 외곽선으로 합쳤습니다. 흰 실선이나 핀홀이 남지 않는지 굵은 weight와 악센트 변형에서 확인합니다.],
+)
+
+#v(4mm)
+#grid(
+  columns: (18mm, 1fr),
+  row-gutter: 2.6mm,
+  [#eyebrow[100]], [#text(size: 30pt, weight: 100)[A Á À Ä Å Ą Æ А]],
+  [#eyebrow[300]], [#text(size: 30pt, weight: 300)[A Á À Ä Å Ą Æ А]],
+  [#eyebrow[400]], [#text(size: 30pt, weight: 400)[A Á À Ä Å Ą Æ А]],
+  [#eyebrow[500]], [#text(size: 30pt, weight: 500)[A Á À Ä Å Ą Æ А]],
+  [#eyebrow[600]], [#text(size: 30pt, weight: 600)[A Á À Ä Å Ą Æ А]],
+  [#eyebrow[700]], [#text(size: 30pt, weight: 700)[A Á À Ä Å Ą Æ А]],
+  [#eyebrow[800]], [#text(size: 30pt, weight: 800)[A Á À Ä Å Ą Æ А]],
+)
+
+#v(6mm)
+#line(length: 100%, stroke: 0.5pt + rule)
+#v(5mm)
+#grid(
+  columns: (1fr, 1fr),
+  column-gutter: 9mm,
+  [
+    #eyebrow[BOLD 700 / 48 PT]
+    #v(2mm)
+    #text(size: 48pt, weight: 700)[AAA]
+    #v(2mm)
+    #text(size: 14pt, weight: 700)[AARDVARK · DATA ANALYSIS]
+  ],
+  [
+    #eyebrow[EXTRABOLD 800 / 48 PT]
+    #v(2mm)
+    #text(size: 48pt, weight: 800)[AAA]
+    #v(2mm)
+    #text(size: 14pt, weight: 800)[환경 A/B 분석 · 24 Å]
+  ],
+)
+
+#v(7mm)
+#box(width: 100%, inset: 4.5mm, radius: 1.5mm, fill: wash)[
+  #eyebrow[REGRESSION CHECK]
+  #v(1.5mm)
+  #text(size: 8.7pt)[완성 폰트의 `A`에 폭이 넓고 높이가 낮은 독립 crossbar contour가 남으면 자동 검사가 실패합니다. 윤곽의 외접 범위와 advance는 union 전후 동일합니다.]
 ]

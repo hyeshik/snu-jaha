@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator
@@ -15,6 +16,7 @@ VENDOR_ID = "HCHK"
 TARGET_UPM = 1000
 
 LATIN_X_SCALE = 0.895
+LATIN_ADVANCE_SCALE = 0.889
 LATIN_Y_SCALE = 0.936
 LATIN_Y_SHIFT = -11.0
 
@@ -36,6 +38,12 @@ class StyleSpec:
     def postscript_name(self) -> str:
         return f"SNUJaha-{self.name}"
 
+    def output_style_name(self, italic: bool) -> str:
+        return f"{self.name} Italic" if italic else self.name
+
+    def output_postscript_name(self, italic: bool) -> str:
+        return f"SNUJaha-{self.output_style_name(italic).replace(' ', '')}"
+
     @property
     def fontforge_weight(self) -> str:
         return {
@@ -55,6 +63,11 @@ class StyleSpec:
         if self.name == "Bold":
             return 32
         return 0
+
+    def output_stylemap(self, italic: bool) -> int:
+        if italic:
+            return 1 | (32 if self.name == "Bold" else 0)
+        return self.stylemap
 
 
 STYLE_SPECS = {
@@ -89,11 +102,11 @@ LICENSE_URL = "https://openfontlicense.org"
 
 # The Korean source remains responsible for Korean and East Asian glyphs. The
 # Latin source supplies Latin, Cyrillic, punctuation, and the glyph slots
-# and OpenType alternates for figures. Finalization replaces the default 0–9
-# outlines and metrics with RIDIBatang originals without disturbing those
-# feature connections. Context symbols commonly used as Korean list markers
-# remain with RIDIBatang so that circled and enclosed forms keep a coherent CJK
-# texture.
+# and OpenType alternates for figures. Upright finalization replaces the default
+# 0–9 outlines and metrics with RIDIBatang originals without disturbing those
+# feature connections; italic finalization keeps the native Roboto Serif
+# figures. Context symbols commonly used as Korean list markers remain with
+# RIDIBatang so that circled and enclosed forms keep a coherent CJK texture.
 CJK_CODEPOINT_RANGES = (
     (0x1100, 0x11FF),
     (0x2E80, 0x2EFF),
@@ -181,7 +194,10 @@ def should_expand_hangul_advance(codepoint: int) -> bool:
     )
 
 
-def transformed_advance(width: float, scale: float = LATIN_X_SCALE) -> int:
+def transformed_advance(
+    width: float,
+    scale: float = LATIN_ADVANCE_SCALE,
+) -> int:
     return round(width * scale)
 
 
@@ -253,7 +269,11 @@ def transform_hangul(font, style: StyleSpec) -> int:
     return changed
 
 
-def transform_latin(font) -> int:
+def transform_latin(
+    font,
+    x_scale: float = LATIN_X_SCALE,
+    advance_scale: float = LATIN_ADVANCE_SCALE,
+) -> int:
     glyphs = list(font.glyphs())
     for glyph in glyphs:
         if glyph.references:
@@ -262,18 +282,55 @@ def transform_latin(font) -> int:
     changed = 0
     for glyph in glyphs:
         original_width = glyph.width
-        glyph.transform(
-            (LATIN_X_SCALE, 0, 0, LATIN_Y_SCALE, 0, LATIN_Y_SHIFT)
+        new_advance = (
+            0
+            if original_width == 0
+            else transformed_advance(original_width, advance_scale)
         )
-        glyph.width = 0 if original_width == 0 else transformed_advance(original_width)
+        x_shift = (new_advance - original_width * x_scale) / 2
+        glyph.transform(
+            (x_scale, 0, 0, LATIN_Y_SCALE, x_shift, LATIN_Y_SHIFT)
+        )
+        glyph.width = new_advance
         changed += 1
     return changed
 
 
-def rewrite_metadata(font, style: StyleSpec) -> None:
-    font.familyname = FAMILY_NAME
-    font.fullname = f"{FAMILY_NAME} {style.name}"
-    font.fontname = style.postscript_name
+def is_capital_a_family(glyph_name: str) -> bool:
+    return glyph_name.startswith("A")
+
+
+def merge_capital_a_overlaps(font) -> int:
+    merged = 0
+    for glyph in font.glyphs():
+        if not is_capital_a_family(glyph.glyphname):
+            continue
+        glyph.removeOverlap()
+        glyph.correctDirection()
+        merged += 1
+    return merged
+
+
+def postscript_family_name(family_name: str) -> str:
+    return re.sub(r"[^A-Za-z0-9]", "", family_name)
+
+
+def rewrite_metadata(
+    font,
+    style: StyleSpec,
+    family_name: str = FAMILY_NAME,
+    italic: bool = False,
+    italic_angle: float = 0,
+) -> None:
+    output_style = style.output_style_name(italic)
+    postscript_name = (
+        style.output_postscript_name(italic)
+        if family_name == FAMILY_NAME
+        else f"{postscript_family_name(family_name)}-{output_style.replace(' ', '')}"
+    )
+    font.familyname = family_name
+    font.fullname = f"{family_name} {output_style}"
+    font.fontname = postscript_name
     font.weight = style.fontforge_weight
     font.version = VERSION
     font.copyright = COPYRIGHT_TEXT
@@ -281,25 +338,25 @@ def rewrite_metadata(font, style: StyleSpec) -> None:
     font.os2_width = 5
     font.os2_fstype = 0
     font.os2_vendor = VENDOR_ID
-    font.os2_stylemap = style.stylemap
-    font.italicangle = 0
+    font.os2_stylemap = style.output_stylemap(italic)
+    font.italicangle = italic_angle if italic else 0
 
     source_notice = (
-        "SNU Jaha is a derivative of RIDIBatang and Roboto Serif. "
+        f"{family_name} is a derivative of RIDIBatang and Roboto Serif. "
         "The upstream names are used only for attribution."
     )
     font.sfnt_names = (
         ("English (US)", "Copyright", COPYRIGHT_TEXT),
-        ("English (US)", "Family", FAMILY_NAME),
-        ("English (US)", "SubFamily", style.name),
+        ("English (US)", "Family", family_name),
+        ("English (US)", "SubFamily", output_style),
         (
             "English (US)",
             "UniqueID",
-            f"{VERSION};{VENDOR_ID};{style.postscript_name}",
+            f"{VERSION};{VENDOR_ID};{postscript_name}",
         ),
-        ("English (US)", "Fullname", f"{FAMILY_NAME} {style.name}"),
+        ("English (US)", "Fullname", f"{family_name} {output_style}"),
         ("English (US)", "Version", f"Version {VERSION}"),
-        ("English (US)", "PostScriptName", style.postscript_name),
+        ("English (US)", "PostScriptName", postscript_name),
         ("English (US)", "Trademark", source_notice),
         ("English (US)", "Manufacturer", "Hyeshik Chang"),
         (
@@ -307,9 +364,9 @@ def rewrite_metadata(font, style: StyleSpec) -> None:
             "Designer",
             "RIDI, Sandoll, Roboto Serif Project Authors; Hyeshik Chang (modifications)",
         ),
-        ("English (US)", "Preferred Family", FAMILY_NAME),
-        ("English (US)", "Preferred Styles", style.name),
-        ("English (US)", "Compatible Full", f"{FAMILY_NAME} {style.name}"),
+        ("English (US)", "Preferred Family", family_name),
+        ("English (US)", "Preferred Styles", output_style),
+        ("English (US)", "Compatible Full", f"{family_name} {output_style}"),
         ("English (US)", "License", LICENSE_DESCRIPTION),
         ("English (US)", "License URL", LICENSE_URL),
     )
@@ -321,6 +378,10 @@ def build(
     output: Path,
     style: StyleSpec,
     quiet: bool,
+    latin_x_scale: float = LATIN_X_SCALE,
+    latin_advance_scale: float = LATIN_ADVANCE_SCALE,
+    family_name: str = FAMILY_NAME,
+    italic: bool = False,
 ) -> None:
     try:
         import fontforge
@@ -338,8 +399,16 @@ def build(
         latin.reencode("unicode")
         if latin.em != TARGET_UPM:
             latin.em = TARGET_UPM
+        italic_angle = latin.italicangle if italic else 0
+        if italic and italic_angle == 0:
+            raise ValueError("The italic Roboto Serif source has no italic angle.")
         latin_cjk_removed = remove_cjk_from_latin(latin)
-        latin_changed = transform_latin(latin)
+        latin_changed = transform_latin(
+            latin,
+            latin_x_scale,
+            latin_advance_scale,
+        )
+        capital_a_merged = merge_capital_a_overlaps(latin)
         with suppress_c_stderr(quiet):
             latin.generate(str(transformed_latin), flags=("opentype",))
     finally:
@@ -355,7 +424,13 @@ def build(
         hangul_transformed = transform_hangul(base, style)
         with suppress_c_stderr(quiet):
             base.mergeFonts(str(transformed_latin))
-        rewrite_metadata(base, style)
+        rewrite_metadata(
+            base,
+            style,
+            family_name,
+            italic=italic,
+            italic_angle=italic_angle,
+        )
         with suppress_c_stderr(quiet):
             validation = base.validate()
             base.generate(str(output), flags=("opentype",))
@@ -364,7 +439,8 @@ def build(
         transformed_latin.unlink(missing_ok=True)
 
     print(
-        f"{output}: style={style.name}, cid_flattened={flattened}, "
+        f"{output}: style={style.output_style_name(italic)}, "
+        f"italic_angle={italic_angle:g}, cid_flattened={flattened}, "
         f"ridi_non_cjk_removed={ridi_removed}, "
         f"ridi_lookups_removed={removed_lookups}, "
         f"hangul_transformed={hangul_transformed}, "
@@ -373,8 +449,11 @@ def build(
         f"hangul_advance_scale={hangul_advance_scale(style):.3f}, "
         f"roboto_cjk_removed={latin_cjk_removed}, "
         f"roboto_glyphs_transformed={latin_changed}, "
-        f"latin_transform=({LATIN_X_SCALE:.3f},{LATIN_Y_SCALE:.3f},"
-        f"{LATIN_Y_SHIFT:.1f}), validate=0x{validation:x}"
+        f"capital_a_overlaps_merged={capital_a_merged}, "
+        f"latin_transform=({latin_x_scale:.3f},{LATIN_Y_SCALE:.3f},"
+        f"{LATIN_Y_SHIFT:.1f}), "
+        f"latin_advance_scale={latin_advance_scale:.3f}, "
+        f"validate=0x{validation:x}"
     )
 
 
@@ -386,6 +465,14 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument("--roboto-serif", required=True)
     result.add_argument("--output", required=True)
     result.add_argument("--style", choices=STYLE_SPECS, default="Regular")
+    result.add_argument("--latin-x-scale", type=float, default=LATIN_X_SCALE)
+    result.add_argument(
+        "--latin-advance-scale",
+        type=float,
+        default=LATIN_ADVANCE_SCALE,
+    )
+    result.add_argument("--family-name", default=FAMILY_NAME)
+    result.add_argument("--italic", action="store_true")
     result.add_argument("--verbose-fontforge", action="store_true")
     return result
 
@@ -398,6 +485,10 @@ def main() -> None:
         Path(args.output),
         STYLE_SPECS[args.style],
         quiet=not args.verbose_fontforge,
+        latin_x_scale=args.latin_x_scale,
+        latin_advance_scale=args.latin_advance_scale,
+        family_name=args.family_name,
+        italic=args.italic,
     )
 
 

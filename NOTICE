@@ -1,8 +1,9 @@
 SNU Jaha
 
-SNU Jaha is a derivative font prepared by Hyeshik Chang. The Regular build
-keeps Korean and East Asian glyphs from RIDIBatang and imports non-CJK glyphs
-and OpenType layout features from Roboto Serif 14pt Regular.
+SNU Jaha is a derivative font prepared by Hyeshik Chang. Its upright and italic
+styles keep Korean and East Asian glyphs from RIDIBatang and import non-CJK
+glyphs and OpenType layout features from Roboto Serif 14pt. Upright default
+figures come from RIDIBatang; italic default figures come from Roboto Serif.
 
 Upstream font software:
 

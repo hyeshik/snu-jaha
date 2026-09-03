@@ -14,6 +14,8 @@ import build_lightweight_microfonts as lightweight_builder
 import build_extrabold_microfonts as extrabold_builder
 import audit_lightweight_candidates as lightweight_audit
 import audit_extrabold_full as full_extrabold_audit
+import build_charis_regular_candidate as charis_candidate
+import build_width_candidates as width_candidates
 import instantiate_roboto_serif as roboto_instancer
 
 
@@ -39,6 +41,16 @@ class BuildJahaPolicyTests(unittest.TestCase):
         self.assertEqual(builder.STYLE_SPECS["Thin"].stylemap, 0)
         self.assertEqual(builder.STYLE_SPECS["Light"].stylemap, 0)
         self.assertEqual(builder.STYLE_SPECS["ExtraBold"].stylemap, 0)
+        self.assertEqual(
+            builder.STYLE_SPECS["Regular"].output_style_name(True),
+            "Regular Italic",
+        )
+        self.assertEqual(
+            builder.STYLE_SPECS["Bold"].output_postscript_name(True),
+            "SNUJaha-BoldItalic",
+        )
+        self.assertEqual(builder.STYLE_SPECS["Regular"].output_stylemap(True), 1)
+        self.assertEqual(builder.STYLE_SPECS["Bold"].output_stylemap(True), 33)
 
     def test_hangul_and_cjk_punctuation_stay_with_ridi(self) -> None:
         for codepoint in (0x1100, 0x3131, 0x3001, 0xAC00, 0xD7A3, 0xFF01):
@@ -94,8 +106,49 @@ class BuildJahaPolicyTests(unittest.TestCase):
                 self.assertTrue(builder.should_keep_ridi_codepoint(codepoint))
 
     def test_latin_advance_uses_declared_scale(self) -> None:
-        self.assertEqual(builder.transformed_advance(1000), 895)
-        self.assertEqual(builder.transformed_advance(560), 501)
+        self.assertEqual(builder.LATIN_X_SCALE, 0.895)
+        self.assertEqual(builder.LATIN_ADVANCE_SCALE, 0.889)
+        self.assertEqual(builder.transformed_advance(1000), 889)
+        self.assertEqual(builder.transformed_advance(560), 498)
+        self.assertEqual(builder.transformed_advance(1000, 0.93), 930)
+        self.assertEqual(
+            builder.postscript_family_name("SNU Jaha Width E"),
+            "SNUJahaWidthE",
+        )
+
+    def test_production_separates_outline_and_advance_scales(self) -> None:
+        self.assertEqual(builder.transformed_advance(822, 0.889), 731)
+
+    def test_capital_a_family_is_selected_for_overlap_merging(self) -> None:
+        for glyph_name in ("A", "Aacute", "Aogonek", "AE", "Acyr"):
+            with self.subTest(glyph_name=glyph_name):
+                self.assertTrue(builder.is_capital_a_family(glyph_name))
+        for glyph_name in ("a", "arrowleft", "B"):
+            with self.subTest(glyph_name=glyph_name):
+                self.assertFalse(builder.is_capital_a_family(glyph_name))
+
+    def test_width_candidate_matrix_covers_axis_and_transform_options(self) -> None:
+        self.assertEqual(
+            [
+                (candidate.key, candidate.width, candidate.x_scale)
+                for candidate in width_candidates.CANDIDATES
+            ],
+            [
+                ("A", 95, 0.895),
+                ("B", 92, 0.895),
+                ("C", 90, 0.895),
+                ("D", 85, 0.915),
+                ("E", 80, 0.930),
+            ],
+        )
+
+    def test_charis_candidate_keeps_native_width_and_fits_vertical_bounds(self) -> None:
+        self.assertEqual(charis_candidate.CANDIDATE_FAMILY_NAME, "SNU Jaha Latin Alt")
+        self.assertNotIn("Charis", charis_candidate.CANDIDATE_FAMILY_NAME)
+        self.assertEqual(charis_candidate.CHARIS_X_SCALE, 1.0)
+        self.assertEqual(charis_candidate.CHARIS_Y_SCALE, 1.005)
+        self.assertEqual(charis_candidate.CHARIS_Y_SHIFT, -7.0)
+        self.assertEqual(charis_candidate.transformed_advance(560), 560)
 
     def test_vertical_transform_matches_reference_glyph_fit(self) -> None:
         roboto_cap_top = 710
@@ -123,7 +176,12 @@ class BuildJahaPolicyTests(unittest.TestCase):
     def test_intermediate_latin_instances_keep_regular_axes(self) -> None:
         self.assertEqual(
             roboto_instancer.AXIS_LOCATIONS,
-            {"GRAD": 0, "opsz": 14, "wdth": 100},
+            {"GRAD": 0, "opsz": 14, "wdth": 91},
+        )
+        self.assertEqual(roboto_instancer.WEIGHT_FLOOR, 400)
+        self.assertEqual(
+            roboto_instancer.WEIGHT_FLOOR_CODEPOINTS,
+            {0x2191, 0x2193, 0x2196, 0x2197, 0x2198, 0x2199, 0x27F7},
         )
 
     def test_lightweight_microfont_matrix_covers_search_space(self) -> None:
