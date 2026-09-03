@@ -2,10 +2,12 @@ PYTHON ?= python3
 FONTFORGE ?= fontforge
 TYPST ?= typst
 
-VERSION := 0.1.0
+VERSION ?= $(shell sed -n 's/^VERSION = "\(.*\)"$$/\1/p' scripts/build_jaha.py)
 BUILD_DIR := build
 DIST_DIR := dist
 PROOF_DIR := proof
+PACKAGE_NAME ?= SNUJaha-$(VERSION)
+PACKAGE_ZIP ?= $(DIST_DIR)/$(PACKAGE_NAME).zip
 OUTPUT := $(DIST_DIR)/SNUJaha-Regular.otf
 RAW_OUTPUT := $(BUILD_DIR)/SNUJaha-Regular.raw.otf
 ITALIC_OUTPUT := $(DIST_DIR)/SNUJaha-RegularItalic.otf
@@ -103,9 +105,9 @@ WIDTH_COMPARE_DIR := $(BUILD_DIR)/width-comparison
 WIDTH_COMPARE_AUDIT := $(WIDTH_COMPARE_DIR)/audit.json
 WIDTH_COMPARE_SPECIMEN := $(PROOF_DIR)/SNUJaha-Regular-Width-Comparison.pdf
 
-.PHONY: all sources charis-source build thin-build light-build medium-build semibold-build bold-build extrabold-build upright-build italic-build thin-italic-build light-italic-build medium-italic-build semibold-italic-build bold-italic-build extrabold-italic-build italic-family-build full-build verify thin-verify light-verify medium-verify semibold-verify bold-verify extrabold-verify italic-verify verify-all weight-range-audit extrabold-full-audit italic-guard-audit specimen bold-specimen weight-specimen lightweight-audit extrabold-audit family-specimen italic-specimen compatibility-specimen appendard-blend-specimen appendard-balance-audit appendard-size-restore-review charis-regular-comparison width-comparison mixed-text-proof test clean
+.PHONY: all sources charis-source regular-build build thin-build light-build medium-build semibold-build bold-build extrabold-build upright-build italic-build thin-italic-build light-italic-build medium-italic-build semibold-italic-build bold-italic-build extrabold-italic-build italic-family-build full-build verify thin-verify light-verify medium-verify semibold-verify bold-verify extrabold-verify italic-verify verify-all weight-range-audit extrabold-full-audit italic-guard-audit distribution specimen bold-specimen weight-specimen lightweight-audit extrabold-audit family-specimen italic-specimen compatibility-specimen appendard-blend-specimen appendard-balance-audit appendard-size-restore-review charis-regular-comparison width-comparison mixed-text-proof test clean
 
-all: specimen
+all: build
 
 sources:
 	./scripts/download_sources.sh
@@ -113,7 +115,7 @@ sources:
 charis-source:
 	./scripts/download_charis_source.sh
 
-build: sources
+regular-build: sources
 	mkdir -p "$(BUILD_DIR)" "$(DIST_DIR)"
 	$(PYTHON) scripts/instantiate_roboto_serif.py \
 		--input '$(ROBOTO_VARIABLE_SOURCE)' \
@@ -277,9 +279,9 @@ extrabold-build: sources
 		--style ExtraBold
 	$(PYTHON) scripts/verify_font.py "$(EXTRABOLD_OUTPUT)"
 
-upright-build: thin-build light-build build medium-build semibold-build bold-build extrabold-build
+upright-build: thin-build light-build regular-build medium-build semibold-build bold-build extrabold-build
 
-italic-build: build
+italic-build: regular-build
 	mkdir -p "$(BUILD_DIR)" "$(DIST_DIR)"
 	$(PYTHON) scripts/instantiate_roboto_serif.py \
 		--input '$(ROBOTO_ITALIC_VARIABLE_SOURCE)' \
@@ -409,28 +411,30 @@ italic-family-build: thin-italic-build light-italic-build italic-build medium-it
 
 full-build: upright-build italic-family-build
 
-verify:
+build: full-build
+
+verify: regular-build
 	$(PYTHON) scripts/verify_font.py "$(OUTPUT)"
 
-thin-verify:
+thin-verify: thin-build
 	$(PYTHON) scripts/verify_font.py "$(THIN_OUTPUT)"
 
-light-verify:
+light-verify: light-build
 	$(PYTHON) scripts/verify_font.py "$(LIGHT_OUTPUT)"
 
-medium-verify:
+medium-verify: medium-build
 	$(PYTHON) scripts/verify_font.py "$(MEDIUM_OUTPUT)"
 
-semibold-verify:
+semibold-verify: semibold-build
 	$(PYTHON) scripts/verify_font.py "$(SEMIBOLD_OUTPUT)"
 
-bold-verify:
+bold-verify: bold-build
 	$(PYTHON) scripts/verify_font.py "$(BOLD_OUTPUT)"
 
-extrabold-verify:
+extrabold-verify: extrabold-build
 	$(PYTHON) scripts/verify_font.py "$(EXTRABOLD_OUTPUT)"
 
-italic-verify:
+italic-verify: italic-family-build
 	$(PYTHON) scripts/verify_font.py "$(THIN_ITALIC_OUTPUT)"
 	$(PYTHON) scripts/verify_font.py "$(LIGHT_ITALIC_OUTPUT)"
 	$(PYTHON) scripts/verify_font.py "$(ITALIC_OUTPUT)"
@@ -446,21 +450,27 @@ italic-guard-audit: italic-family-build
 		--font-dir "$(DIST_DIR)" \
 		--output "$(ITALIC_GUARD_AUDIT)"
 
-weight-range-audit: thin-build light-build build
+weight-range-audit: thin-build light-build regular-build
 	$(PYTHON) scripts/audit_weight_range.py \
 		--thin "$(THIN_OUTPUT)" \
 		--light "$(LIGHT_OUTPUT)" \
 		--regular "$(OUTPUT)" \
 		--output "$(FULL_WEIGHT_AUDIT)"
 
-extrabold-full-audit: build bold-build extrabold-build
+extrabold-full-audit: regular-build bold-build extrabold-build
 	$(PYTHON) scripts/audit_extrabold_full.py \
 		--regular "$(OUTPUT)" \
 		--bold "$(BOLD_OUTPUT)" \
 		--extrabold "$(EXTRABOLD_OUTPUT)" \
 		--output "$(EXTRABOLD_FULL_AUDIT)"
 
-specimen: build
+distribution: build verify-all weight-range-audit extrabold-full-audit italic-guard-audit
+	$(PYTHON) scripts/package_distribution.py \
+		--input-dir "$(DIST_DIR)" \
+		--output "$(PACKAGE_ZIP)"
+	test -f "$(PACKAGE_ZIP)"
+
+specimen: regular-build
 	mkdir -p "$(PROOF_DIR)"
 	$(TYPST) compile \
 		--font-path "$(DIST_DIR)" \
@@ -468,19 +478,19 @@ specimen: build
 		--font-path sources/roboto-serif \
 		specimen/specimen.typ "$(SPECIMEN)"
 
-bold-specimen: build bold-build
+bold-specimen: regular-build bold-build
 	mkdir -p "$(PROOF_DIR)"
 	$(TYPST) compile \
 		--font-path "$(DIST_DIR)" \
 		specimen/bold-proof.typ "$(BOLD_SPECIMEN)"
 
-weight-specimen: build medium-build semibold-build bold-build
+weight-specimen: regular-build medium-build semibold-build bold-build
 	mkdir -p "$(PROOF_DIR)"
 	$(TYPST) compile \
 		--font-path "$(DIST_DIR)" \
 		specimen/weight-proof.typ "$(WEIGHT_SPECIMEN)"
 
-lightweight-audit: build
+lightweight-audit: regular-build
 	mkdir -p "$(LIGHTWEIGHT_AUDIT_DIR)" "$(PROOF_DIR)"
 	$(PYTHON) scripts/instantiate_roboto_serif.py --input '$(ROBOTO_VARIABLE_SOURCE)' --output "$(LIGHTWEIGHT_AUDIT_DIR)/Roboto-W180.ttf" --weight 180
 	$(PYTHON) scripts/instantiate_roboto_serif.py --input '$(ROBOTO_VARIABLE_SOURCE)' --output "$(LIGHTWEIGHT_AUDIT_DIR)/Roboto-W200.ttf" --weight 200
@@ -507,7 +517,7 @@ lightweight-audit: build
 		--font-path "$(LIGHTWEIGHT_AUDIT_DIR)" \
 		specimen/lightweight-microproof.typ "$(LIGHTWEIGHT_SPECIMEN)"
 
-extrabold-audit: build bold-build
+extrabold-audit: regular-build bold-build
 	mkdir -p "$(EXTRABOLD_AUDIT_DIR)" "$(PROOF_DIR)"
 	$(PYTHON) scripts/instantiate_roboto_serif.py --input '$(ROBOTO_VARIABLE_SOURCE)' --output "$(EXTRABOLD_AUDIT_DIR)/Roboto-W610.ttf" --weight 610
 	$(PYTHON) scripts/instantiate_roboto_serif.py --input '$(ROBOTO_VARIABLE_SOURCE)' --output "$(EXTRABOLD_AUDIT_DIR)/Roboto-W620.ttf" --weight 620
@@ -596,7 +606,7 @@ compatibility-specimen: full-build
 		--font-path "$(SNU_SPROUT_DIR)" \
 		specimen/snu-family-compatibility-proof.typ "$(PROOF_DIR)/SNU-Family-Compatibility-144-{p}.png"
 
-appendard-blend-specimen: build
+appendard-blend-specimen: regular-build
 	mkdir -p "$(APPENDARD_BLEND_CANDIDATE_DIR)" "$(APPENDARD_BLEND_RASTER_DIR)" "$(PROOF_DIR)"
 	$(PYTHON) scripts/build_appendard_fit_candidates.py \
 		--jaha "$(OUTPUT)" \
@@ -668,7 +678,7 @@ appendard-size-restore-review: appendard-blend-specimen
 		--font-path "$(APPENDARD_RESTORE_CANDIDATE_DIR)" \
 		specimen/appendard-size-restore-review.typ "$(PROOF_DIR)/SNU-Appendard-2to1-Size-Restore-144-{p}.png"
 
-charis-regular-comparison: build charis-source
+charis-regular-comparison: regular-build charis-source
 	mkdir -p "$(CHARIS_COMPARE_DIR)" "$(PROOF_DIR)"
 	$(FONTFORGE) -lang=py -script scripts/build_charis_regular_candidate.py \
 		--ridibatang sources/ridibatang/RIDIBatang.otf \
@@ -703,7 +713,7 @@ charis-regular-comparison: build charis-source
 		--font-path sources/ridibatang \
 		specimen/charis-regular-comparison.typ "$(PROOF_DIR)/SNUJaha-Roboto-Charis-Regular-144-{p}.png"
 
-width-comparison: build
+width-comparison: regular-build
 	mkdir -p "$(WIDTH_COMPARE_DIR)" "$(PROOF_DIR)"
 	$(PYTHON) scripts/build_width_candidates.py \
 		--variable-source '$(ROBOTO_VARIABLE_SOURCE)' \
@@ -728,7 +738,7 @@ width-comparison: build
 		--font-path sources/ridibatang \
 		specimen/width-comparison.typ "$(PROOF_DIR)/SNUJaha-Regular-Width-Comparison-144-{p}.png"
 
-mixed-text-proof: build
+mixed-text-proof: regular-build
 	mkdir -p "$(PROOF_DIR)"
 	$(TYPST) compile \
 		--font-path "$(DIST_DIR)" \

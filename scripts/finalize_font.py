@@ -15,6 +15,7 @@ from fontTools.pens.transformPen import TransformPen
 from fontTools.ttLib import TTFont
 
 from add_italic_cjk_guard import GuardStats, append_guard_lookup
+from build_jaha import font_revision
 
 
 HORIZONTAL_VALUE_FIELDS = ("XPlacement", "XAdvance")
@@ -308,7 +309,7 @@ def finalize(
             font["hmtx"][font.getBestCmap()[ord(character)]][0]
             for character in DEFAULT_FIGURES
         }
-        font["head"].fontRevision = 0.1
+        font["head"].fontRevision = font_revision()
         font["head"].created = BUILD_TIMESTAMP
         font["head"].modified = BUILD_TIMESTAMP
         font["head"].macStyle = (

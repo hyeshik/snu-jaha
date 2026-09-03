@@ -29,6 +29,21 @@ HANGUL_Y_SHIFT = 24.8622817344205
 EXTRABOLD_HANGUL_ADVANCE_SCALE = 1.04
 
 
+def font_revision(version: str = VERSION) -> float:
+    """Map major.minor[.patch] to an unambiguous OpenType revision."""
+    parts = version.split(".")
+    if len(parts) not in (2, 3):
+        raise ValueError(f"Expected a major.minor[.patch] version: {version}")
+    major, minor = int(parts[0]), int(parts[1])
+    patch = int(parts[2]) if len(parts) == 3 else 0
+    if not 0 <= minor < 10 or not 0 <= patch < 100:
+        raise ValueError(
+            f"Version {version} cannot be mapped to a unique head.fontRevision; "
+            "pick a wider encoding before releasing it."
+        )
+    return round(major + minor / 10 + patch / 1000, 6)
+
+
 @dataclass(frozen=True)
 class StyleSpec:
     name: str

@@ -115,7 +115,7 @@ Requirements:
 
 - FontForge with Python scripting support
 - Python 3, fontTools, Pillow, NumPy, and uharfbuzz
-- Typst for the specimen
+- Typst for optional specimens
 - `curl`, `sha256sum`, and `unzip`
 
 Run:
@@ -126,24 +126,42 @@ python3 -m venv .venv
 make PYTHON=.venv/bin/python specimen
 ```
 
-This creates:
+This creates the Regular font and its specimen:
 
 - `dist/SNUJaha-Regular.otf`
 - `proof/SNUJaha-Regular-Specimen.pdf`
 
-To build all seven weights in upright and italic and create both family proofs,
-run:
+To build the complete family, run:
+
+```sh
+make PYTHON=.venv/bin/python build
+```
+
+This creates fourteen fonts named
+`dist/SNUJaha-{Thin,Light,Regular,Medium,SemiBold,Bold,ExtraBold}{,Italic}.otf`.
+To also create both family proofs, run:
 
 ```sh
 make PYTHON=.venv/bin/python family-specimen
 make PYTHON=.venv/bin/python italic-specimen
 ```
 
-This creates fourteen fonts named
-`dist/SNUJaha-{Thin,Light,Regular,Medium,SemiBold,Bold,ExtraBold}{,Italic}.otf`,
-the six-page upright `proof/SNUJaha-Full-Weight-Range-Specimen.pdf`, and the
+This additionally creates the six-page upright
+`proof/SNUJaha-Full-Weight-Range-Specimen.pdf` and the
 four-page `proof/SNUJaha-Italic-Family-Specimen.pdf`. The italic target also
 writes `build/italic-cjk-guard-audit.json` and 144 dpi page previews.
+
+To build, verify, and package the complete family for distribution, run:
+
+```sh
+make PYTHON=.venv/bin/python distribution
+```
+
+The resulting `dist/SNUJaha-0.1.0.zip` has a flat archive root containing the
+14 OTF files plus `LICENSE.txt`, `LICENSE-RIDIBatang.txt`, and
+`LICENSE-RobotoSerif.txt`. The package deliberately excludes specimens, source
+fonts, and project documentation. Archive entry order, timestamps, permissions,
+and compression are fixed so identical inputs produce identical ZIP bytes.
 
 The Latin-to-Hangul guard is OpenType pair positioning and therefore operates
 inside one shaping run. Applications that split an italic Latin span and the
@@ -290,6 +308,15 @@ Serif layout features. `make italic-guard-audit` additionally checks every
 measured letter/figure-to-Hangul geometry-class pair and shapes representative
 `f`, `ff`, `fi`, `fl`, `T`, `K`, `V`, `W`, `Y`, lowercase, and figure risk
 boundaries in every weight.
+
+## Continuous integration and releases
+
+GitHub Actions runs the unit tests, builds all 14 fonts from pinned sources,
+checks every font, runs the full weight and italic-clearance audits, verifies
+the flat ZIP layout, and uploads the ZIP as a 30-day workflow artifact on every
+push and pull request. A tag matching the project version exactly (for example,
+`v0.1.0`) publishes that same audited artifact as a GitHub Release using
+`RELEASE_NOTE.md`; a mismatched tag is rejected before the build.
 
 ## Sources and licensing
 

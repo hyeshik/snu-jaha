@@ -9,6 +9,8 @@ from fontTools.pens.boundsPen import BoundsPen
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.ttLib import TTFont
 
+from build_jaha import VERSION, font_revision
+
 
 EXPECTED_GSUB = {"frac", "liga", "lnum", "onum", "pnum", "tnum", "zero"}
 EXPECTED_GPOS = {"kern", "mark"}
@@ -323,6 +325,12 @@ def verify(path: Path) -> None:
             errors.append("output must use CFF outlines")
         if font["head"].unitsPerEm != 1000:
             errors.append("unitsPerEm must be 1000")
+        expected_revision = font_revision()
+        if abs(font["head"].fontRevision - expected_revision) > 1 / 65536:
+            errors.append(
+                f"head.fontRevision is {font['head'].fontRevision}, "
+                f"expected {expected_revision}"
+            )
         if font["OS/2"].usWeightClass != profile.weight_class:
             errors.append(f"weight class must be {profile.weight_class}")
         if font["OS/2"].fsSelection != expected_fs_selection:
@@ -400,6 +408,10 @@ def verify(path: Path) -> None:
 
         if decoded_names(font, 1) != {"SNU Jaha"}:
             errors.append(f"unexpected family names: {sorted(decoded_names(font, 1))}")
+        if decoded_names(font, 5) != {f"Version {VERSION}"}:
+            errors.append(
+                f"unexpected version names: {sorted(decoded_names(font, 5))}"
+            )
         if decoded_names(font, 16) != {"SNU Jaha"}:
             errors.append(
                 f"unexpected preferred family names: {sorted(decoded_names(font, 16))}"
@@ -422,6 +434,9 @@ def verify(path: Path) -> None:
             errors.append(
                 f"unexpected CFF font names: {font['CFF '].cff.fontNames}"
             )
+        cff_version = font["CFF "].cff.topDictIndex[0].version
+        if cff_version != VERSION:
+            errors.append(f"CFF version is {cff_version!r}, expected {VERSION!r}")
         italic_angle = font["post"].italicAngle
         if italic and italic_angle == 0:
             errors.append("italic output must have a nonzero italic angle")

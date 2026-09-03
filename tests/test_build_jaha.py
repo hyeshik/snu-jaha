@@ -52,6 +52,14 @@ class BuildJahaPolicyTests(unittest.TestCase):
         self.assertEqual(builder.STYLE_SPECS["Regular"].output_stylemap(True), 1)
         self.assertEqual(builder.STYLE_SPECS["Bold"].output_stylemap(True), 33)
 
+    def test_version_maps_to_unique_opentype_revision(self) -> None:
+        self.assertEqual(builder.font_revision(), 0.1)
+        self.assertEqual(builder.font_revision("1.2.34"), 1.234)
+        with self.assertRaises(ValueError):
+            builder.font_revision("1.10.0")
+        with self.assertRaises(ValueError):
+            builder.font_revision("1.2.100")
+
     def test_hangul_and_cjk_punctuation_stay_with_ridi(self) -> None:
         for codepoint in (0x1100, 0x3131, 0x3001, 0xAC00, 0xD7A3, 0xFF01):
             with self.subTest(codepoint=codepoint):
