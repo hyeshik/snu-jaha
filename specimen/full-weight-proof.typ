@@ -24,7 +24,7 @@
     #v(1.6mm)
     #grid(
       columns: (1fr, auto),
-      text(size: 6.6pt, fill: gray)[RIDI −20/−6/+0/+8/+16/+24/+30R · ROBOTO W91 · X .895 · A .889],
+      text(size: 6.6pt, fill: gray)[RIDI −28R/−12/+0/+14/+22/+28R/+36R · ROBOTO W91 · X .895 · A .889],
       text(size: 7pt, fill: accent)[#counter(page).display("01")],
     )
   ],
@@ -75,24 +75,24 @@
     column-gutter: 6mm,
     [#eyebrow[FULL HANGUL] #v(1mm) #text(size: 10.5pt, weight: 500)[11,172 / 11,172]],
     [#eyebrow[ENCODED ORDER] #v(1mm) #text(size: 10.5pt, weight: 500)[12,656 PASS]],
-    [#eyebrow[FIGURE GAPS] #v(1mm) #text(size: 10.5pt, weight: 500)[84 · 72 · 66 · 60 · 56 · 50 · 46]],
+    [#eyebrow[FIGURE GAPS] #v(1mm) #text(size: 10.5pt, weight: 500)[92 · 78 · 66 · 56 · 52 · 48 · 44]],
   )
 ]
 
 #v(7mm)
-#range-row([THIN 100], 100, [RIDI −20 · Roboto W91/200], [18 pt 이상 display])
+#range-row([THIN 100], 100, [RIDI −28 retain · Roboto 100/G−10], [18 pt 이상 display])
 #v(2.8mm)
-#range-row([LIGHT 300], 300, [RIDI −6 · Roboto W91/333], [도입 · 보조 본문])
+#range-row([LIGHT 300], 300, [RIDI −12 · Roboto W91/250], [도입 · 보조 본문])
 #v(2.8mm)
 #range-row([REGULAR 400], 400, [RIDI +0 · Roboto W91/400], [연속 본문])
 #v(2.8mm)
-#range-row([MEDIUM 500], 500, [RIDI +8 · Roboto W91/467], [완만한 강조])
+#range-row([MEDIUM 500], 500, [RIDI +14 · Roboto W91/500], [완만한 강조])
 #v(2.8mm)
-#range-row([SEMIBOLD 600], 600, [RIDI +16 · Roboto W91/533], [절 제목 · 핵심 수치])
+#range-row([SEMIBOLD 600], 600, [RIDI +22 · Roboto W91/565], [절 제목 · 핵심 수치])
 #v(2.8mm)
-#range-row([BOLD 700], 700, [RIDI +24 · Roboto W91/600], [문서 제목])
+#range-row([BOLD 700], 700, [RIDI +28 retain · Roboto W91/610], [문서 제목])
 #v(2.8mm)
-#range-row([EXTRABOLD 800], 800, [RIDI +30 retain · Roboto W91/633], [강한 display 제목])
+#range-row([EXTRABOLD 800], 800, [RIDI +36 retain · Roboto W91/660], [강한 display 제목])
 
 #v(6mm)
 #line(length: 100%, stroke: 0.5pt + rule)
@@ -305,7 +305,7 @@
 // Page 5 — ExtraBold full-font role
 #title(
   [ExtraBold 800: 강한 display의 상한],
-  note: [RIDI Regular 원본 +30 retain, 한글 advance 104%, Roboto Serif wght 633.333입니다. 작은 크기는 진단용이며 18–36 pt의 제목과 핵심 수치를 우선 확인합니다.],
+  note: [RIDI Regular 원본 +36 retain, 한글 advance 108%, Roboto Serif wght 660입니다. 작은 크기는 진단용이며 18–36 pt의 제목과 핵심 수치를 우선 확인합니다.],
 )
 
 #v(4mm)
@@ -314,8 +314,8 @@
     columns: (1fr, 1fr, 1fr),
     column-gutter: 6mm,
     [#eyebrow[FULL HANGUL] #v(1mm) #text(size: 10.5pt, weight: 800)[11,172 PASS]],
-    [#eyebrow[INK / REGULAR] #v(1mm) #text(size: 10.5pt, weight: 800)[#ratio(extrabold-audit.at("hangul_area_ratio").at("median"))]],
-    [#eyebrow[SCRIPT DIFFERENCE] #v(1mm) #text(size: 10.5pt, weight: 800)[#ratio(extrabold-audit.at("mixed_script_difference"))]],
+    [#eyebrow[COVERAGE / REGULAR] #v(1mm) #text(size: 10.5pt, weight: 800)[#ratio(extrabold-audit.at("hangul_coverage_ratio").at("median"))]],
+    [#eyebrow[SCRIPT DIFFERENCE] #v(1mm) #text(size: 10.5pt, weight: 800)[#ratio(extrabold-audit.at("mixed_script_coverage_difference"))]],
   )
 ]
 
@@ -350,9 +350,9 @@
   #eyebrow[FULL-FONT AUDIT RESULT]
   #v(2mm)
   #text(size: 8.7pt)[
-    12,656 encoded characters · 11,172 modern Hangul · median advance 943→981 · unexpected mismatch 0 ·
-    minimum pair gap #unit(extrabold-audit.at("hangul_spacing").at("minimum_gap")) units · Bold→ExtraBold vector/raster reversal 0 · 00 gap 46 units. `뼮`의 64 ppem
-    counter 면적 69.2%는 microproof에서 확인한 반올림 경계 사례로 기록했습니다.
+    12,656 encoded characters · 11,172 modern Hangul · representative advance 943→1018 · unexpected mismatch 0 ·
+    minimum pair gap #unit(extrabold-audit.at("hangul_spacing").at("minimum_gap")) units · Bold→ExtraBold vector/raster reversal 0 · 00 gap 44 units.
+    64 ppem에서 사라진 counter는 없고, 남은 counter 면적 감소는 review record로 보존했습니다.
   ]
 ]
 

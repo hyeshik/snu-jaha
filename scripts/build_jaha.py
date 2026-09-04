@@ -11,7 +11,7 @@ from typing import Iterator
 
 
 FAMILY_NAME = "SNU Jaha"
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 VENDOR_ID = "HCHK"
 TARGET_UPM = 1000
 
@@ -26,7 +26,6 @@ LATIN_Y_SHIFT = -11.0
 # outline size, and retain the reviewed baseline shift.
 HANGUL_Y_SCALE = 0.984
 HANGUL_Y_SHIFT = 24.8622817344205
-EXTRABOLD_HANGUL_ADVANCE_SCALE = 1.04
 
 
 def font_revision(version: str = VERSION) -> float:
@@ -48,6 +47,7 @@ def font_revision(version: str = VERSION) -> float:
 class StyleSpec:
     name: str
     weight_class: int
+    hangul_advance_scale: float = 1.0
 
     @property
     def postscript_name(self) -> str:
@@ -91,8 +91,8 @@ STYLE_SPECS = {
     "Regular": StyleSpec("Regular", 400),
     "Medium": StyleSpec("Medium", 500),
     "SemiBold": StyleSpec("SemiBold", 600),
-    "Bold": StyleSpec("Bold", 700),
-    "ExtraBold": StyleSpec("ExtraBold", 800),
+    "Bold": StyleSpec("Bold", 700, 1.04),
+    "ExtraBold": StyleSpec("ExtraBold", 800, 1.08),
 }
 DEFAULT_STYLE = STYLE_SPECS["Regular"]
 POSTSCRIPT_NAME = DEFAULT_STYLE.postscript_name
@@ -216,14 +216,8 @@ def transformed_advance(
     return round(width * scale)
 
 
-def hangul_advance_scale(style: StyleSpec) -> float:
-    if style.name == "ExtraBold":
-        return EXTRABOLD_HANGUL_ADVANCE_SCALE
-    return 1.0
-
-
 def transformed_hangul_advance(width: float, style: StyleSpec) -> int:
-    return round(width * hangul_advance_scale(style))
+    return round(width * style.hangul_advance_scale)
 
 
 def flatten_cid_font(font, quiet: bool) -> bool:
@@ -461,7 +455,7 @@ def build(
         f"hangul_transformed={hangul_transformed}, "
         f"hangul_transform=(1.000,{HANGUL_Y_SCALE:.3f},centered,"
         f"{HANGUL_Y_SHIFT:.3f}), "
-        f"hangul_advance_scale={hangul_advance_scale(style):.3f}, "
+        f"hangul_advance_scale={style.hangul_advance_scale:.3f}, "
         f"roboto_cjk_removed={latin_cjk_removed}, "
         f"roboto_glyphs_transformed={latin_changed}, "
         f"capital_a_overlaps_merged={capital_a_merged}, "

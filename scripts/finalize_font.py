@@ -59,7 +59,7 @@ STYLE_METRICS = {
     ),
     "Medium": StyleMetrics(
         cap_height=654,
-        x_height=492,
+        x_height=493,
     ),
     "SemiBold": StyleMetrics(
         cap_height=654,

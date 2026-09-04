@@ -25,7 +25,7 @@ class FinalizeFontPolicyTests(unittest.TestCase):
         self.assertEqual(finalizer.STYLE_METRICS["Thin"].x_height, 492)
         self.assertEqual(finalizer.STYLE_METRICS["Light"].x_height, 492)
         self.assertEqual(finalizer.STYLE_METRICS["Regular"].x_height, 492)
-        self.assertEqual(finalizer.STYLE_METRICS["Medium"].x_height, 492)
+        self.assertEqual(finalizer.STYLE_METRICS["Medium"].x_height, 493)
         self.assertEqual(finalizer.STYLE_METRICS["SemiBold"].x_height, 493)
         self.assertEqual(finalizer.STYLE_METRICS["Bold"].cap_height, 654)
         self.assertEqual(finalizer.STYLE_METRICS["Bold"].x_height, 494)

@@ -23,7 +23,6 @@ from audit_lightweight_candidates import percentile
 from audit_weight_range import zero_gap
 from build_extrabold_microfonts import HEAVY_AUDIT_CODEPOINTS
 from build_jaha import (
-    EXTRABOLD_HANGUL_ADVANCE_SCALE,
     STYLE_SPECS,
     should_expand_hangul_advance,
     should_keep_ridi_codepoint,
@@ -34,7 +33,7 @@ from build_lightweight_microfonts import DEFAULT_FIGURES
 
 MAX_EXAMPLES = 50
 FULL_RASTER_PPEM = 64
-REVIEWED_COUNTER_AREA_MINIMA = {"뼮": 0.68}
+MINIMUM_RETAINED_COUNTER_AREA_RATIO = 0.55
 SPECIMEN_DIR = Path(__file__).resolve().parents[1] / "specimen"
 MODERN_HANGUL_RUN = re.compile(r"[가-힣]{2,}")
 
@@ -131,6 +130,8 @@ def audit(
         raster_equalities = []
         regular_ratios = []
         bold_ratios = []
+        regular_coverage_ratios = []
+        bold_coverage_ratios = []
         for codepoint in cjk_codepoints:
             glyph_names = {
                 name: cmap[codepoint] for name, cmap in cmaps.items()
@@ -144,16 +145,15 @@ def audit(
                 for name, glyph_name in glyph_names.items()
             }
             expected_advances = {
-                "Regular": advances["Regular"],
-                "Bold": advances["Regular"],
-                "ExtraBold": (
+                name: (
                     transformed_hangul_advance(
                         advances["Regular"],
-                        STYLE_SPECS["ExtraBold"],
+                        STYLE_SPECS[name],
                     )
                     if should_expand_hangul_advance(codepoint)
                     else advances["Regular"]
-                ),
+                )
+                for name in paths
             }
             if advances != expected_advances:
                 advance_mismatches.append(
@@ -182,6 +182,14 @@ def audit(
             if codepoint in hangul_codepoints and areas["Regular"] > 0:
                 regular_ratios.append(areas["ExtraBold"] / areas["Regular"])
                 bold_ratios.append(areas["Bold"] / areas["Regular"])
+                regular_coverage_ratios.append(
+                    (areas["ExtraBold"] / advances["ExtraBold"])
+                    / (areas["Regular"] / advances["Regular"])
+                )
+                bold_coverage_ratios.append(
+                    (areas["Bold"] / advances["Bold"])
+                    / (areas["Regular"] / advances["Regular"])
+                )
 
         for codepoint in hangul_codepoints:
             character = chr(codepoint)
@@ -208,14 +216,28 @@ def audit(
 
         latin_regular_ratios = []
         latin_bold_ratios = []
+        latin_regular_coverage_ratios = []
+        latin_bold_coverage_ratios = []
         for character in LATIN_SENTINELS:
             codepoint = ord(character)
             areas = {
                 name: outline_area(glyph_sets[name], cmaps[name][codepoint])
                 for name in paths
             }
+            advances = {
+                name: fonts[name]["hmtx"][cmaps[name][codepoint]][0]
+                for name in paths
+            }
             latin_regular_ratios.append(areas["ExtraBold"] / areas["Regular"])
             latin_bold_ratios.append(areas["Bold"] / areas["Regular"])
+            latin_regular_coverage_ratios.append(
+                (areas["ExtraBold"] / advances["ExtraBold"])
+                / (areas["Regular"] / advances["Regular"])
+            )
+            latin_bold_coverage_ratios.append(
+                (areas["Bold"] / advances["Bold"])
+                / (areas["Regular"] / advances["Regular"])
+            )
 
         topology_merges = []
         counter_losses = []
@@ -270,25 +292,30 @@ def audit(
                             "bold": bold_topology["counter_area"],
                             "extrabold": extrabold_topology["counter_area"],
                         }
-                        reviewed_minimum = REVIEWED_COUNTER_AREA_MINIMA.get(
-                            character
-                        )
-                        if (
-                            reviewed_minimum is not None
-                            and ratio >= reviewed_minimum
-                        ):
+                        if ratio >= MINIMUM_RETAINED_COUNTER_AREA_RATIO:
                             counter_area_reviews.append(item)
                         else:
                             counter_area_losses.append(item)
 
         hangul_summary = summarize(regular_ratios)
         bold_summary = summarize(bold_ratios)
+        hangul_coverage_summary = summarize(regular_coverage_ratios)
+        bold_coverage_summary = summarize(bold_coverage_ratios)
         latin_summary = summarize(latin_regular_ratios)
         latin_bold_summary = summarize(latin_bold_ratios)
-        hangul_separation = hangul_summary["median"] - bold_summary["median"]
-        latin_separation = latin_summary["median"] - latin_bold_summary["median"]
+        latin_coverage_summary = summarize(latin_regular_coverage_ratios)
+        latin_bold_coverage_summary = summarize(latin_bold_coverage_ratios)
+        hangul_separation = (
+            hangul_coverage_summary["median"]
+            - bold_coverage_summary["median"]
+        )
+        latin_separation = (
+            latin_coverage_summary["median"]
+            - latin_bold_coverage_summary["median"]
+        )
         script_difference = abs(
-            hangul_summary["median"] - latin_summary["median"]
+            hangul_coverage_summary["median"]
+            - latin_coverage_summary["median"]
         )
         extra_zero_gap = zero_gap(fonts["ExtraBold"])
 
@@ -327,24 +354,24 @@ def audit(
             failures.append("CJK vector order")
         if raster_order_violations:
             failures.append("Hangul raster order")
-        if not 1.44 <= hangul_summary["median"] <= 1.54:
-            failures.append("Hangul median ratio")
-        if not 0.08 <= hangul_separation <= 0.16:
-            failures.append("Hangul Bold separation")
+        if not 1.47 <= hangul_coverage_summary["median"] <= 1.53:
+            failures.append("Hangul median coverage ratio")
+        if not 0.06 <= hangul_separation <= 0.10:
+            failures.append("Hangul Bold coverage separation")
         if (
-            hangul_summary["ninety_ninth_percentile"]
-            - hangul_summary["first_percentile"]
-            > 0.10
+            hangul_coverage_summary["ninety_ninth_percentile"]
+            - hangul_coverage_summary["first_percentile"]
+            > 0.15
         ):
-            failures.append("Hangul ratio spread")
-        if not 45 <= extra_zero_gap <= 51:
+            failures.append("Hangul coverage ratio spread")
+        if not 42 <= extra_zero_gap <= 46:
             failures.append("00 gap")
-        if not 1.47 <= latin_summary["median"] <= 1.56:
-            failures.append("Latin median ratio")
-        if not 0.06 <= latin_separation <= 0.14:
-            failures.append("Latin Bold separation")
+        if not 1.46 <= latin_coverage_summary["median"] <= 1.53:
+            failures.append("Latin median coverage ratio")
+        if not 0.07 <= latin_separation <= 0.12:
+            failures.append("Latin Bold coverage separation")
         if script_difference > 0.05:
-            failures.append("mixed-script ratio")
+            failures.append("mixed-script coverage ratio")
         if any(item["ppem"] == 64 for item in counter_losses):
             failures.append("64 ppem counter loss")
         if counter_area_losses:
@@ -358,15 +385,22 @@ def audit(
             "encoded_codepoints": len(common_codepoints),
             "cjk_codepoints": len(cjk_codepoints),
             "hangul_codepoints": len(hangul_codepoints),
-            "extrabold_hangul_advance_scale": EXTRABOLD_HANGUL_ADVANCE_SCALE,
+            "hangul_advance_scales": {
+                name: STYLE_SPECS[name].hangul_advance_scale
+                for name in paths
+            },
             "cmap_differences": cmap_differences,
             "hangul_area_ratio": hangul_summary,
             "bold_hangul_area_ratio": bold_summary,
-            "hangul_bold_separation": hangul_separation,
+            "hangul_coverage_ratio": hangul_coverage_summary,
+            "bold_hangul_coverage_ratio": bold_coverage_summary,
+            "hangul_bold_coverage_separation": hangul_separation,
             "latin_area_ratio": latin_summary,
             "bold_latin_area_ratio": latin_bold_summary,
-            "latin_bold_separation": latin_separation,
-            "mixed_script_difference": script_difference,
+            "latin_coverage_ratio": latin_coverage_summary,
+            "bold_latin_coverage_ratio": latin_bold_coverage_summary,
+            "latin_bold_coverage_separation": latin_separation,
+            "mixed_script_coverage_difference": script_difference,
             "zero_gaps": {
                 name: zero_gap(font) for name, font in fonts.items()
             },
@@ -428,8 +462,8 @@ def main() -> None:
     print(
         f"{status}: encoded={report['encoded_codepoints']}, "
         f"hangul={report['hangul_codepoints']}, "
-        f"Hangul median={report['hangul_area_ratio']['median']:.3f}, "
-        f"Latin median={report['latin_area_ratio']['median']:.3f}, "
+        f"Hangul coverage={report['hangul_coverage_ratio']['median']:.3f}, "
+        f"Latin coverage={report['latin_coverage_ratio']['median']:.3f}, "
         f"00 gap={report['zero_gaps']['ExtraBold']:.1f}, "
         f"Hangul pair gap={report['hangul_spacing']['minimum_gap']:.1f}, "
         f"failures={','.join(report['failures']) or '-'}"

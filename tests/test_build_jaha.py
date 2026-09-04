@@ -12,6 +12,7 @@ import build_jaha as builder
 import build_ridi_weight as weight_builder
 import build_lightweight_microfonts as lightweight_builder
 import build_extrabold_microfonts as extrabold_builder
+import build_weight_exploration_microfonts as weight_exploration
 import audit_lightweight_candidates as lightweight_audit
 import audit_extrabold_full as full_extrabold_audit
 import build_charis_regular_candidate as charis_candidate
@@ -23,7 +24,7 @@ class BuildJahaPolicyTests(unittest.TestCase):
     def test_family_identity(self) -> None:
         self.assertEqual(builder.FAMILY_NAME, "SNU Jaha")
         self.assertEqual(builder.POSTSCRIPT_NAME, "SNUJaha-Regular")
-        self.assertEqual(builder.VERSION, "0.1.0")
+        self.assertEqual(builder.VERSION, "0.2.0")
         self.assertEqual(builder.STYLE_SPECS["Regular"].weight_class, 400)
         self.assertEqual(builder.STYLE_SPECS["Thin"].weight_class, 100)
         self.assertEqual(builder.STYLE_SPECS["Light"].weight_class, 300)
@@ -53,7 +54,7 @@ class BuildJahaPolicyTests(unittest.TestCase):
         self.assertEqual(builder.STYLE_SPECS["Bold"].output_stylemap(True), 33)
 
     def test_version_maps_to_unique_opentype_revision(self) -> None:
-        self.assertEqual(builder.font_revision(), 0.1)
+        self.assertEqual(builder.font_revision(), 0.2)
         self.assertEqual(builder.font_revision("1.2.34"), 1.234)
         with self.assertRaises(ValueError):
             builder.font_revision("1.10.0")
@@ -81,26 +82,25 @@ class BuildJahaPolicyTests(unittest.TestCase):
             with self.subTest(codepoint=codepoint):
                 self.assertTrue(builder.should_expand_hangul_advance(codepoint))
 
-    def test_extrabold_hangul_advance_is_widened(self) -> None:
-        self.assertEqual(builder.EXTRABOLD_HANGUL_ADVANCE_SCALE, 1.04)
+    def test_heavy_hangul_advances_are_widened(self) -> None:
         self.assertEqual(
-            builder.hangul_advance_scale(builder.STYLE_SPECS["Regular"]),
+            builder.STYLE_SPECS["Regular"].hangul_advance_scale,
             1.0,
         )
         self.assertEqual(
-            builder.hangul_advance_scale(builder.STYLE_SPECS["Bold"]),
-            1.0,
-        )
-        self.assertEqual(
-            builder.hangul_advance_scale(builder.STYLE_SPECS["ExtraBold"]),
+            builder.STYLE_SPECS["Bold"].hangul_advance_scale,
             1.04,
+        )
+        self.assertEqual(
+            builder.STYLE_SPECS["ExtraBold"].hangul_advance_scale,
+            1.08,
         )
         self.assertEqual(
             builder.transformed_hangul_advance(
                 943,
                 builder.STYLE_SPECS["ExtraBold"],
             ),
-            981,
+            1018,
         )
 
     def test_latin_and_general_punctuation_come_from_roboto(self) -> None:
@@ -262,6 +262,145 @@ class BuildJahaPolicyTests(unittest.TestCase):
             candidates[(36, "auto")].figure_x_scale,
             0.916,
         )
+
+    def test_weight_exploration_targets_expand_around_regular(self) -> None:
+        self.assertEqual(
+            {
+                style: target.center
+                for style, target in weight_exploration.WEIGHT_TARGETS.items()
+            },
+            {
+                "Thin": 0.58,
+                "Light": 0.82,
+                "Medium": 1.19,
+                "SemiBold": 1.35,
+                "Bold": 1.50,
+                "ExtraBold": 1.61,
+            },
+        )
+
+    def test_weight_exploration_uses_reviewed_cjk_selections(self) -> None:
+        self.assertEqual(
+            weight_exploration.SELECTED_CJK_CONSTRUCTIONS,
+            {
+                "Thin": (-28, "retain", 1.0),
+                "Light": (-12, "auto", 1.0),
+                "Medium": (14, "auto", 1.0),
+                "SemiBold": (22, "auto", 1.0),
+                "Bold": (28, "retain", 1.04),
+                "ExtraBold": (36, "retain", 1.08),
+            },
+        )
+        self.assertEqual(
+            weight_exploration.SELECTED_LATIN_CONSTRUCTIONS,
+            {
+                "Thin": (100, -10),
+                "Light": (250, 0),
+                "Medium": (500, 0),
+                "SemiBold": (565, 0),
+                "Bold": (610, 0),
+                "ExtraBold": (660, 0),
+            },
+        )
+
+    def test_weight_exploration_candidate_matrix(self) -> None:
+        cjk = weight_exploration.CJK_CANDIDATES
+        latin = weight_exploration.LATIN_CANDIDATES
+        self.assertEqual(len(cjk), 48)
+        self.assertEqual(len(latin), 27)
+        self.assertEqual(
+            {candidate.offset for candidate in cjk if candidate.style == "Thin"},
+            {-26, -28, -30, -32},
+        )
+        self.assertEqual(
+            {candidate.counter for candidate in cjk if candidate.style == "Bold"},
+            {"auto", "retain"},
+        )
+        self.assertEqual(
+            {
+                (
+                    candidate.offset,
+                    candidate.counter,
+                    candidate.hangul_advance_scale,
+                )
+                for candidate in cjk
+                if candidate.style == "ExtraBold"
+            },
+            {
+                (offset, counter, advance_scale)
+                for offset in (36, 38, 40, 42, 44)
+                for counter in ("auto", "retain")
+                for advance_scale in (1.04, 1.08)
+            },
+        )
+        self.assertEqual(
+            {candidate.weight for candidate in latin if candidate.style == "Medium"},
+            {485, 500, 515},
+        )
+        self.assertEqual(
+            {
+                (candidate.weight, candidate.grade)
+                for candidate in latin
+                if candidate.style == "Thin"
+            },
+            {
+                (100, -50),
+                (100, -25),
+                (100, -10),
+                (100, -5),
+                (100, 0),
+                (120, 0),
+                (140, 0),
+            },
+        )
+        self.assertEqual(
+            {
+                candidate.weight
+                for candidate in latin
+                if candidate.style == "ExtraBold"
+            },
+            {660, 680, 700, 725, 750, 775},
+        )
+
+    def test_weight_exploration_geometry_matches_production(self) -> None:
+        candidates = {
+            (candidate.style, candidate.offset, candidate.counter): candidate
+            for candidate in weight_exploration.CJK_CANDIDATES
+        }
+        self.assertEqual(
+            candidates[("Medium", 12, "auto")].hangul_advance_scale,
+            1.0,
+        )
+        self.assertEqual(
+            candidates[("Bold", 28, "retain")].hangul_advance_scale,
+            1.04,
+        )
+        extra_candidates = {
+            (
+                candidate.offset,
+                candidate.counter,
+                candidate.hangul_advance_scale,
+            ): candidate
+            for candidate in weight_exploration.CJK_CANDIDATES
+            if candidate.style == "ExtraBold"
+        }
+        self.assertEqual(
+            extra_candidates[(42, "retain", 1.08)].slug,
+            "ExtraBold-P42-retain-A108",
+        )
+        self.assertAlmostEqual(weight_exploration.FINAL_FIGURE_SCALE, 520 / 560)
+
+    def test_weight_exploration_includes_structure_stress_glyphs(self) -> None:
+        stress_codepoints = {
+            ord(character)
+            for character in weight_exploration.STRUCTURE_STRESS_TEXT
+            if not character.isspace()
+        }
+        self.assertEqual(
+            stress_codepoints,
+            {ord(character) for character in "뾂뼒뼮뿔쫓"},
+        )
+        self.assertTrue(stress_codepoints <= weight_exploration.AUDIT_CODEPOINTS)
 
     def test_extrabold_spacing_corpus_extracts_modern_hangul_pairs(self) -> None:
         pairs = full_extrabold_audit.extract_hangul_bigrams(

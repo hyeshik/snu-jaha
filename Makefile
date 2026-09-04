@@ -36,28 +36,28 @@ EXTRABOLD_OUTPUT := $(DIST_DIR)/SNUJaha-ExtraBold.otf
 EXTRABOLD_RAW_OUTPUT := $(BUILD_DIR)/SNUJaha-ExtraBold.raw.otf
 EXTRABOLD_ITALIC_OUTPUT := $(DIST_DIR)/SNUJaha-ExtraBoldItalic.otf
 EXTRABOLD_ITALIC_RAW_OUTPUT := $(BUILD_DIR)/SNUJaha-ExtraBoldItalic.raw.otf
-RIDI_MEDIUM_SOURCE := $(BUILD_DIR)/RIDIBatang-Medium-8.otf
-RIDI_SEMIBOLD_SOURCE := $(BUILD_DIR)/RIDIBatang-SemiBold-16.otf
-RIDI_BOLD_SOURCE := $(BUILD_DIR)/RIDIBatang-Bold-24.otf
-RIDI_EXTRABOLD_SOURCE := $(BUILD_DIR)/RIDIBatang-ExtraBold-30-retain.otf
-RIDI_THIN_SOURCE := $(BUILD_DIR)/RIDIBatang-Thin-20.otf
-RIDI_LIGHT_SOURCE := $(BUILD_DIR)/RIDIBatang-Light-6.otf
+RIDI_MEDIUM_SOURCE := $(BUILD_DIR)/RIDIBatang-Medium-14.otf
+RIDI_SEMIBOLD_SOURCE := $(BUILD_DIR)/RIDIBatang-SemiBold-22.otf
+RIDI_BOLD_SOURCE := $(BUILD_DIR)/RIDIBatang-Bold-28-retain.otf
+RIDI_EXTRABOLD_SOURCE := $(BUILD_DIR)/RIDIBatang-ExtraBold-36-retain.otf
+RIDI_THIN_SOURCE := $(BUILD_DIR)/RIDIBatang-Thin-28-retain.otf
+RIDI_LIGHT_SOURCE := $(BUILD_DIR)/RIDIBatang-Light-12.otf
 ROBOTO_VARIABLE_SOURCE := sources/roboto-serif/RobotoSerif[GRAD,opsz,wdth,wght].ttf
 ROBOTO_ITALIC_VARIABLE_SOURCE := sources/roboto-serif/RobotoSerif-Italic[GRAD,opsz,wdth,wght].ttf
-ROBOTO_THIN_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Weight200.ttf
-ROBOTO_LIGHT_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Weight333.ttf
+ROBOTO_THIN_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Weight100-GradeM10.ttf
+ROBOTO_LIGHT_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Weight250.ttf
 ROBOTO_REGULAR_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Weight400.ttf
-ROBOTO_MEDIUM_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Weight467.ttf
-ROBOTO_SEMIBOLD_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Weight533.ttf
-ROBOTO_BOLD_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Weight600.ttf
-ROBOTO_EXTRABOLD_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Weight633.ttf
-ROBOTO_THIN_ITALIC_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Italic-Weight200.ttf
-ROBOTO_LIGHT_ITALIC_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Italic-Weight333.ttf
+ROBOTO_MEDIUM_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Weight500.ttf
+ROBOTO_SEMIBOLD_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Weight565.ttf
+ROBOTO_BOLD_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Weight610.ttf
+ROBOTO_EXTRABOLD_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Weight660.ttf
+ROBOTO_THIN_ITALIC_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Italic-Weight100-GradeM10.ttf
+ROBOTO_LIGHT_ITALIC_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Italic-Weight250.ttf
 ROBOTO_REGULAR_ITALIC_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Italic-Weight400.ttf
-ROBOTO_MEDIUM_ITALIC_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Italic-Weight467.ttf
-ROBOTO_SEMIBOLD_ITALIC_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Italic-Weight533.ttf
-ROBOTO_BOLD_ITALIC_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Italic-Weight600.ttf
-ROBOTO_EXTRABOLD_ITALIC_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Italic-Weight633.ttf
+ROBOTO_MEDIUM_ITALIC_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Italic-Weight500.ttf
+ROBOTO_SEMIBOLD_ITALIC_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Italic-Weight565.ttf
+ROBOTO_BOLD_ITALIC_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Italic-Weight610.ttf
+ROBOTO_EXTRABOLD_ITALIC_SOURCE := $(BUILD_DIR)/RobotoSerif14pt-Italic-Weight660.ttf
 SPECIMEN := $(PROOF_DIR)/SNUJaha-Regular-Specimen.pdf
 MIXED_TEXT_PROOF := $(PROOF_DIR)/SNUJaha-Regular-Mixed-Text-Proof.pdf
 BOLD_SPECIMEN := $(PROOF_DIR)/SNUJaha-Bold-Candidate-Specimen.pdf
@@ -73,6 +73,10 @@ EXTRABOLD_AUDIT_DIR := $(BUILD_DIR)/extrabold-audit
 EXTRABOLD_AUDIT := $(EXTRABOLD_AUDIT_DIR)/audit.json
 EXTRABOLD_SPECIMEN := $(PROOF_DIR)/SNUJaha-ExtraBold-Microproof.pdf
 EXTRABOLD_FULL_AUDIT := $(BUILD_DIR)/extrabold-full-audit.json
+WEIGHT_EXPLORATION_DIR := $(BUILD_DIR)/weight-exploration
+WEIGHT_EXPLORATION_AUDIT := $(WEIGHT_EXPLORATION_DIR)/audit.json
+WEIGHT_EXPLORATION_SPECIMEN := $(PROOF_DIR)/SNUJaha-Weight-Exploration-Microproof.pdf
+UPPER_WEIGHT_COMPARISON := $(PROOF_DIR)/SNUJaha-Upper-Weight-Microproof.pdf
 SNU_APPENDARD_DIR ?= ../snu-appendard/dist/otf
 SNU_EDGE_DIR ?= ../snu-edge/instance_otf
 SNU_SPROUT_DIR ?= ../snu-sprout/instance_otf
@@ -105,7 +109,7 @@ WIDTH_COMPARE_DIR := $(BUILD_DIR)/width-comparison
 WIDTH_COMPARE_AUDIT := $(WIDTH_COMPARE_DIR)/audit.json
 WIDTH_COMPARE_SPECIMEN := $(PROOF_DIR)/SNUJaha-Regular-Width-Comparison.pdf
 
-.PHONY: all sources charis-source regular-build build thin-build light-build medium-build semibold-build bold-build extrabold-build upright-build italic-build thin-italic-build light-italic-build medium-italic-build semibold-italic-build bold-italic-build extrabold-italic-build italic-family-build full-build verify thin-verify light-verify medium-verify semibold-verify bold-verify extrabold-verify italic-verify verify-all weight-range-audit extrabold-full-audit italic-guard-audit distribution specimen bold-specimen weight-specimen lightweight-audit extrabold-audit family-specimen italic-specimen compatibility-specimen appendard-blend-specimen appendard-balance-audit appendard-size-restore-review charis-regular-comparison width-comparison mixed-text-proof test clean
+.PHONY: all sources charis-source regular-build build thin-build light-build medium-build semibold-build bold-build extrabold-build upright-build italic-build thin-italic-build light-italic-build medium-italic-build semibold-italic-build bold-italic-build extrabold-italic-build italic-family-build full-build verify thin-verify light-verify medium-verify semibold-verify bold-verify extrabold-verify italic-verify verify-all weight-range-audit extrabold-full-audit italic-guard-audit distribution specimen bold-specimen weight-specimen lightweight-audit extrabold-audit weight-exploration upper-weight-comparison family-specimen italic-specimen compatibility-specimen appendard-blend-specimen appendard-balance-audit appendard-size-restore-review charis-regular-comparison width-comparison mixed-text-proof test clean
 
 all: build
 
@@ -139,12 +143,14 @@ thin-build: sources
 	$(PYTHON) scripts/instantiate_roboto_serif.py \
 		--input '$(ROBOTO_VARIABLE_SOURCE)' \
 		--output "$(ROBOTO_THIN_SOURCE)" \
-		--weight 200
+		--weight 100 \
+		--grade -10
 	$(FONTFORGE) -lang=py -script scripts/build_ridi_weight.py \
 		--input sources/ridibatang/RIDIBatang.otf \
 		--output "$(RIDI_THIN_SOURCE)" \
-		--offset -20 \
-		--figure-x-scale 1.046667
+		--offset -28 \
+		--counter retain \
+		--figure-x-scale 1.065333
 	$(FONTFORGE) -lang=py -script scripts/build_jaha.py \
 		--ridibatang "$(RIDI_THIN_SOURCE)" \
 		--roboto-serif "$(ROBOTO_THIN_SOURCE)" \
@@ -163,12 +169,12 @@ light-build: sources
 	$(PYTHON) scripts/instantiate_roboto_serif.py \
 		--input '$(ROBOTO_VARIABLE_SOURCE)' \
 		--output "$(ROBOTO_LIGHT_SOURCE)" \
-		--weight 333.333
+		--weight 250
 	$(FONTFORGE) -lang=py -script scripts/build_ridi_weight.py \
 		--input sources/ridibatang/RIDIBatang.otf \
 		--output "$(RIDI_LIGHT_SOURCE)" \
-		--offset -6 \
-		--figure-x-scale 1.014
+		--offset -12 \
+		--figure-x-scale 1.028
 	$(FONTFORGE) -lang=py -script scripts/build_jaha.py \
 		--ridibatang "$(RIDI_LIGHT_SOURCE)" \
 		--roboto-serif "$(ROBOTO_LIGHT_SOURCE)" \
@@ -187,12 +193,12 @@ medium-build: sources
 	$(PYTHON) scripts/instantiate_roboto_serif.py \
 		--input '$(ROBOTO_VARIABLE_SOURCE)' \
 		--output "$(ROBOTO_MEDIUM_SOURCE)" \
-		--weight 466.667
+		--weight 500
 	$(FONTFORGE) -lang=py -script scripts/build_ridi_weight.py \
 		--input sources/ridibatang/RIDIBatang.otf \
 		--output "$(RIDI_MEDIUM_SOURCE)" \
-		--offset 8 \
-		--figure-x-scale 0.981333
+		--offset 14 \
+		--figure-x-scale 0.967333
 	$(FONTFORGE) -lang=py -script scripts/build_jaha.py \
 		--ridibatang "$(RIDI_MEDIUM_SOURCE)" \
 		--roboto-serif "$(ROBOTO_MEDIUM_SOURCE)" \
@@ -211,12 +217,12 @@ semibold-build: sources
 	$(PYTHON) scripts/instantiate_roboto_serif.py \
 		--input '$(ROBOTO_VARIABLE_SOURCE)' \
 		--output "$(ROBOTO_SEMIBOLD_SOURCE)" \
-		--weight 533.333
+		--weight 565
 	$(FONTFORGE) -lang=py -script scripts/build_ridi_weight.py \
 		--input sources/ridibatang/RIDIBatang.otf \
 		--output "$(RIDI_SEMIBOLD_SOURCE)" \
-		--offset 16 \
-		--figure-x-scale 0.962667
+		--offset 22 \
+		--figure-x-scale 0.948667
 	$(FONTFORGE) -lang=py -script scripts/build_jaha.py \
 		--ridibatang "$(RIDI_SEMIBOLD_SOURCE)" \
 		--roboto-serif "$(ROBOTO_SEMIBOLD_SOURCE)" \
@@ -235,12 +241,13 @@ bold-build: sources
 	$(PYTHON) scripts/instantiate_roboto_serif.py \
 		--input '$(ROBOTO_VARIABLE_SOURCE)' \
 		--output "$(ROBOTO_BOLD_SOURCE)" \
-		--weight 600
+		--weight 610
 	$(FONTFORGE) -lang=py -script scripts/build_ridi_weight.py \
 		--input sources/ridibatang/RIDIBatang.otf \
 		--output "$(RIDI_BOLD_SOURCE)" \
-		--offset 24 \
-		--figure-x-scale 0.944
+		--offset 28 \
+		--counter retain \
+		--figure-x-scale 0.934667
 	$(FONTFORGE) -lang=py -script scripts/build_jaha.py \
 		--ridibatang "$(RIDI_BOLD_SOURCE)" \
 		--roboto-serif "$(ROBOTO_BOLD_SOURCE)" \
@@ -259,13 +266,13 @@ extrabold-build: sources
 	$(PYTHON) scripts/instantiate_roboto_serif.py \
 		--input '$(ROBOTO_VARIABLE_SOURCE)' \
 		--output "$(ROBOTO_EXTRABOLD_SOURCE)" \
-		--weight 633.333
+		--weight 660
 	$(FONTFORGE) -lang=py -script scripts/build_ridi_weight.py \
 		--input sources/ridibatang/RIDIBatang.otf \
 		--output "$(RIDI_EXTRABOLD_SOURCE)" \
-		--offset 30 \
+		--offset 36 \
 		--counter retain \
-		--figure-x-scale 0.93
+		--figure-x-scale 0.916
 	$(FONTFORGE) -lang=py -script scripts/build_jaha.py \
 		--ridibatang "$(RIDI_EXTRABOLD_SOURCE)" \
 		--roboto-serif "$(ROBOTO_EXTRABOLD_SOURCE)" \
@@ -304,7 +311,8 @@ thin-italic-build: thin-build
 	$(PYTHON) scripts/instantiate_roboto_serif.py \
 		--input '$(ROBOTO_ITALIC_VARIABLE_SOURCE)' \
 		--output "$(ROBOTO_THIN_ITALIC_SOURCE)" \
-		--weight 200
+		--weight 100 \
+		--grade -10
 	$(FONTFORGE) -lang=py -script scripts/build_jaha.py \
 		--ridibatang "$(RIDI_THIN_SOURCE)" \
 		--roboto-serif "$(ROBOTO_THIN_ITALIC_SOURCE)" \
@@ -322,7 +330,7 @@ light-italic-build: light-build
 	$(PYTHON) scripts/instantiate_roboto_serif.py \
 		--input '$(ROBOTO_ITALIC_VARIABLE_SOURCE)' \
 		--output "$(ROBOTO_LIGHT_ITALIC_SOURCE)" \
-		--weight 333.333
+		--weight 250
 	$(FONTFORGE) -lang=py -script scripts/build_jaha.py \
 		--ridibatang "$(RIDI_LIGHT_SOURCE)" \
 		--roboto-serif "$(ROBOTO_LIGHT_ITALIC_SOURCE)" \
@@ -340,7 +348,7 @@ medium-italic-build: medium-build
 	$(PYTHON) scripts/instantiate_roboto_serif.py \
 		--input '$(ROBOTO_ITALIC_VARIABLE_SOURCE)' \
 		--output "$(ROBOTO_MEDIUM_ITALIC_SOURCE)" \
-		--weight 466.667
+		--weight 500
 	$(FONTFORGE) -lang=py -script scripts/build_jaha.py \
 		--ridibatang "$(RIDI_MEDIUM_SOURCE)" \
 		--roboto-serif "$(ROBOTO_MEDIUM_ITALIC_SOURCE)" \
@@ -358,7 +366,7 @@ semibold-italic-build: semibold-build
 	$(PYTHON) scripts/instantiate_roboto_serif.py \
 		--input '$(ROBOTO_ITALIC_VARIABLE_SOURCE)' \
 		--output "$(ROBOTO_SEMIBOLD_ITALIC_SOURCE)" \
-		--weight 533.333
+		--weight 565
 	$(FONTFORGE) -lang=py -script scripts/build_jaha.py \
 		--ridibatang "$(RIDI_SEMIBOLD_SOURCE)" \
 		--roboto-serif "$(ROBOTO_SEMIBOLD_ITALIC_SOURCE)" \
@@ -376,7 +384,7 @@ bold-italic-build: bold-build
 	$(PYTHON) scripts/instantiate_roboto_serif.py \
 		--input '$(ROBOTO_ITALIC_VARIABLE_SOURCE)' \
 		--output "$(ROBOTO_BOLD_ITALIC_SOURCE)" \
-		--weight 600
+		--weight 610
 	$(FONTFORGE) -lang=py -script scripts/build_jaha.py \
 		--ridibatang "$(RIDI_BOLD_SOURCE)" \
 		--roboto-serif "$(ROBOTO_BOLD_ITALIC_SOURCE)" \
@@ -394,7 +402,7 @@ extrabold-italic-build: extrabold-build
 	$(PYTHON) scripts/instantiate_roboto_serif.py \
 		--input '$(ROBOTO_ITALIC_VARIABLE_SOURCE)' \
 		--output "$(ROBOTO_EXTRABOLD_ITALIC_SOURCE)" \
-		--weight 633.333
+		--weight 660
 	$(FONTFORGE) -lang=py -script scripts/build_jaha.py \
 		--ridibatang "$(RIDI_EXTRABOLD_SOURCE)" \
 		--roboto-serif "$(ROBOTO_EXTRABOLD_ITALIC_SOURCE)" \
@@ -546,6 +554,32 @@ extrabold-audit: regular-build bold-build
 		--font-path "$(DIST_DIR)" \
 		--font-path "$(EXTRABOLD_AUDIT_DIR)" \
 		specimen/extrabold-microproof.typ "$(EXTRABOLD_SPECIMEN)"
+
+weight-exploration: regular-build
+	mkdir -p "$(WEIGHT_EXPLORATION_DIR)" "$(PROOF_DIR)"
+	$(PYTHON) scripts/instantiate_weight_exploration.py \
+		--input '$(ROBOTO_VARIABLE_SOURCE)' \
+		--output-dir "$(WEIGHT_EXPLORATION_DIR)"
+	$(FONTFORGE) -lang=py -script scripts/build_weight_exploration_microfonts.py \
+		--ridibatang sources/ridibatang/RIDIBatang.otf \
+		--latin-source-dir "$(WEIGHT_EXPLORATION_DIR)" \
+		--output-dir "$(WEIGHT_EXPLORATION_DIR)"
+	$(PYTHON) scripts/audit_weight_exploration.py \
+		--regular "$(OUTPUT)" \
+		--candidate-dir "$(WEIGHT_EXPLORATION_DIR)" \
+		--output "$(WEIGHT_EXPLORATION_AUDIT)"
+	$(TYPST) compile \
+		--root . \
+		--font-path "$(DIST_DIR)" \
+		--font-path "$(WEIGHT_EXPLORATION_DIR)" \
+		specimen/weight-exploration-proof.typ "$(WEIGHT_EXPLORATION_SPECIMEN)"
+
+upper-weight-comparison: weight-exploration
+	$(TYPST) compile \
+		--root . \
+		--font-path "$(DIST_DIR)" \
+		--font-path "$(WEIGHT_EXPLORATION_DIR)" \
+		specimen/upper-weight-comparison-proof.typ "$(UPPER_WEIGHT_COMPARISON)"
 
 family-specimen: full-build weight-range-audit extrabold-full-audit
 	mkdir -p "$(PROOF_DIR)"
@@ -748,4 +782,4 @@ test:
 	$(PYTHON) -m unittest discover -s tests
 
 clean:
-	rm -rf "$(BUILD_DIR)" "$(DIST_DIR)" "$(SPECIMEN)" "$(BOLD_SPECIMEN)" "$(WEIGHT_SPECIMEN)" "$(LIGHTWEIGHT_SPECIMEN)" "$(EXTRABOLD_SPECIMEN)" "$(FULL_WEIGHT_SPECIMEN)" "$(FAMILY_COMPAT_SPECIMEN)" "$(APPENDARD_BLEND_SPECIMEN)" "$(MIXED_TEXT_PROOF)" "$(PROOF_DIR)"/*.png
+	rm -rf "$(BUILD_DIR)" "$(DIST_DIR)" "$(SPECIMEN)" "$(BOLD_SPECIMEN)" "$(WEIGHT_SPECIMEN)" "$(LIGHTWEIGHT_SPECIMEN)" "$(EXTRABOLD_SPECIMEN)" "$(WEIGHT_EXPLORATION_SPECIMEN)" "$(UPPER_WEIGHT_COMPARISON)" "$(FULL_WEIGHT_SPECIMEN)" "$(FAMILY_COMPAT_SPECIMEN)" "$(APPENDARD_BLEND_SPECIMEN)" "$(MIXED_TEXT_PROOF)" "$(PROOF_DIR)"/*.png

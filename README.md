@@ -26,12 +26,12 @@ share one posture and rhythm.
   `M`, `A`, `I`, `N`, `o`, `x`, `n`, `g`, and `p`) while retaining Roboto
   Serif's internal proportions.
 - Hangul optical geometry: original RIDIBatang outline width, 98.4% vertical
-  scale, and a 24.862-unit upward shift. Regular through Bold retain the source
-  advance. ExtraBold widens visible Hangul advances to 104% and centers each
-  outline in the enlarged cell, preventing the `+30 retain` construction from
-  closing inter-glyph space. Invisible Hangul filler controls retain their
-  source widths. This keeps the adopted Original:Appendard 2:1 baseline
-  adjustment and reviewed optical-size restoration unchanged.
+  scale, and a 24.862-unit upward shift. Thin through SemiBold retain the source
+  advance. Bold and ExtraBold widen visible Hangul advances to 104% and 108%
+  respectively and center each outline in the enlarged cell. Invisible Hangul
+  filler controls retain their source widths. This keeps the adopted
+  Original:Appendard 2:1 baseline adjustment and reviewed optical-size
+  restoration unchanged.
 - CJK punctuation, fullwidth forms, enclosed alphanumerics, and common CJK
   context symbols stay with RIDIBatang.
 - ASCII/general punctuation, Latin and Cyrillic alphabets, figure alternates,
@@ -43,7 +43,7 @@ share one posture and rhythm.
   input set starts from all encoded non-CJK letters and numbers and follows
   GSUB outputs, so `f` ligatures, numeral alternates, `T`, `K`, `V`, `W`, `Y`,
   and other potential overhangs are covered.
-- Uppercase `A` and its accented, `AE`, and Cyrillic relatives have their
+- Uppercase Latin `A`, its accented forms, and `AE` relatives have their
   crossbar/stem overlaps merged into continuous outlines, preventing white
   seams in heavy weights and small raster sizes.
 - Seven Roboto arrow symbols whose source interpolation reverses below Regular
@@ -58,42 +58,42 @@ share one posture and rhythm.
 
 ## Complete weight range
 
-The text range keeps the approved Bold as its upper bound, retains the three
-measured positive steps, and adds the two negative-weight constructions that
-passed the representative and full-font audits. The family also includes the
-separately reviewed ExtraBold display extension:
+Version 0.2.0 keeps Regular unchanged and deliberately expands both sides of
+it. The production coordinates are the reviewed leaders from the
+Regular-anchored microfont study:
 
-| Style | Metadata | RIDIBatang increase | Roboto source `wght` | Figure x-scale |
-|---|---:|---:|---:|---:|
-| Thin | 100 | −20 | 200 | 104.6667% |
-| Light | 300 | −6 | 333.333 | 101.4% |
-| Regular | 400 | +0 | 400 | 100% |
-| Medium | 500 | +8 | 466.667 | 98.1333% |
-| SemiBold | 600 | +16 | 533.333 | 96.2667% |
-| Bold | 700 | +24 | 600 | 94.4% |
-| ExtraBold | 800 | +30 retain | 633.333 | 93% |
+| Style | Metadata | RIDIBatang construction | Roboto source | Hangul advance | Figure x-scale |
+|---|---:|---:|---:|---:|---:|
+| Thin | 100 | −28 retain | `wght 100, GRAD −10` | 100% | 106.5333% |
+| Light | 300 | −12 auto | `wght 250` | 100% | 102.8% |
+| Regular | 400 | source | `wght 400` | 100% | 100% |
+| Medium | 500 | +14 auto | `wght 500` | 100% | 96.7333% |
+| SemiBold | 600 | +22 auto | `wght 565` | 100% | 94.8667% |
+| Bold | 700 | +28 retain | `wght 610` | 104% | 93.4667% |
+| ExtraBold | 800 | +36 retain | `wght 660` | 108% | 91.6% |
 
 Korean, East Asian context glyphs, and the upright default figures receive the
-listed FontForge weight offset. Weighting is first recentered in the original cell.
-Regular through Bold preserve every source advance; ExtraBold then widens only
-Hangul cells to 104% and distributes the added space equally on both sides.
-CJK punctuation remains fixed. Upright default figures finish in a common
+listed FontForge weight offset. Weighting is first recentered in the original
+cell. Bold and ExtraBold then widen only visible Hangul cells and distribute
+the added space equally on both sides. CJK punctuation remains fixed. Upright
+default figures finish in a common
 520-unit cell. Italic default figures come from the corresponding Roboto Serif
 instance and finish at 498 units after the Latin advance transform. Latin and
 general punctuation use static upright or native italic Roboto Serif instances
 at `wdth=91` and the listed weight coordinates, then retain the Regular
 geometry transform.
 
-The conservative source-weight mapping keeps the approved Bold at 700.
-ExtraBold uses the separately reviewed `+30 retain` construction: it starts
-again from RIDIBatang Regular rather than applying a second transformation to
-Bold. Its minimum-size and counter behavior are documented as a display-style
-decision in `WEIGHTS.md`.
+Every synthetic weight starts directly from RIDIBatang Regular; no stage is
+derived from another weighted output. Thin, Bold, and ExtraBold use `retain`
+counter handling. ExtraBold remains a display style because some dense
+counter and join changes are visible at small sizes; its accepted review
+records are documented in `WEIGHTS.md`.
 
 The full-font audit checks all 12,656 encoded characters, including all 11,172
 modern Hangul syllables, for missing outlines, unexpected advance changes, and
 `Thin ≤ Light ≤ Regular` raster-ink order. The ExtraBold audit independently
-checks the intentional 104% Hangul advance, complete `Bold < ExtraBold` CJK
+checks the intentional 104%/108% heavy-weight advances, complete
+`Bold < ExtraBold` CJK
 vector, 64 ppem raster order, and every Hangul bigram found in the specimen
 sources for nonpositive inter-glyph spacing. The
 upright specimen compares all seven weights, stresses dense Hangul counters,
@@ -103,7 +103,38 @@ the complete posture range, mixed scientific text, and Latin-to-Hangul risk
 boundaries.
 
 See `WEIGHTS.md` for measured ink areas, tabular-figure spacing, role
-assignments, and the comparison with a stronger alternative Bold.
+assignments, and the accepted upper-weight construction.
+
+To reproduce the production weight selection around the unchanged Regular,
+run:
+
+```sh
+make PYTHON=.venv/bin/python weight-exploration
+```
+
+This builds representative CJK and Latin microfonts for Thin, Light, Medium,
+SemiBold, Bold, and ExtraBold; measures each candidate against fixed Regular
+coverage; and writes `build/weight-exploration/audit.json` plus
+the seven-page comparison proof
+`proof/SNUJaha-Weight-Exploration-Microproof.pdf`. The microfonts include
+the production Hangul geometry and 520-unit figures. Bold candidates include
+the selected 104% Hangul advance. ExtraBold explores `+36` through
+`+44`, `auto` and `retain` counters, and 104%/108% Hangul advances; its spacing
+gate rejects any candidate with a nonpositive audited Hangul-pair outline gap.
+Latin microfonts apply the same capital-`A` overlap cleanup as production so
+the diagonal/crossbar junction remains valid at heavy weights. These are
+review assets, not release fonts.
+
+For the focused SemiBold–Bold–ExtraBold comparison, run:
+
+```sh
+make PYTHON=.venv/bin/python upper-weight-comparison
+```
+
+This records the selected Bold `+28 retain` and ExtraBold `+36 retain` pair
+against the previous `+32`/`+44` construction, including 104%/108% Hangul
+cells and matched Roboto Serif coordinates. The two-page result is
+`proof/SNUJaha-Upper-Weight-Microproof.pdf`.
 
 The common Latin transform remains a measured family parameter. See
 `ALIGNMENT.md` for the reference measurements; the full specimen supplies the
@@ -157,7 +188,7 @@ To build, verify, and package the complete family for distribution, run:
 make PYTHON=.venv/bin/python distribution
 ```
 
-The resulting `dist/SNUJaha-0.1.0.zip` has a flat archive root containing the
+The resulting `dist/SNUJaha-0.2.0.zip` has a flat archive root containing the
 14 OTF files plus `LICENSE.txt`, `LICENSE-RIDIBatang.txt`, and
 `LICENSE-RobotoSerif.txt`. The package deliberately excludes specimens, source
 fonts, and project documentation. Archive entry order, timestamps, permissions,
@@ -315,7 +346,7 @@ GitHub Actions runs the unit tests, builds all 14 fonts from pinned sources,
 checks every font, runs the full weight and italic-clearance audits, verifies
 the flat ZIP layout, and uploads the ZIP as a 30-day workflow artifact on every
 push and pull request. A tag matching the project version exactly (for example,
-`v0.1.0`) publishes that same audited artifact as a GitHub Release using
+`v0.2.0`) publishes that same audited artifact as a GitHub Release using
 `RELEASE_NOTE.md`; a mismatched tag is rejected before the build.
 
 ## Sources and licensing
