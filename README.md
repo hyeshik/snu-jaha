@@ -1,5 +1,7 @@
 # SNU Jaha
 
+Explore the complete SNU typeface collection on the [QBio Fonts website](https://qbio.io/share/fonts/).
+
 SNU Jaha is an OpenType/CFF serif prototype for Korean research and long-form
 reading. Its name comes from Jahayeon (자하연) at Seoul National University.
 The family keeps Korean and East Asian glyphs from RIDIBatang and replaces
