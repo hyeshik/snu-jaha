@@ -11,6 +11,16 @@ figures come from RIDIBatang for restrained academic number setting. Italic
 styles retain Roboto Serif's native italic figures so numbers and Latin text
 share one posture and rhythm.
 
+## Printing compatibility
+
+Final OTF export uses FontForge's `round` flag to write integer CFF outline
+and hint operands after all geometry transformations. Fractional operands
+correlate with missing or distorted text reported from Pages on macOS Tahoe
+to an HP Color LaserJet Pro M281fdw. Integer export avoids that representation;
+confirmation on that physical printer is still required. Advance widths and
+the design transforms remain as specified. Built-font regression tests scan
+every glyph for fractional coordinates.
+
 ## Design decisions
 
 - Korean base: RIDIBatang 1.0.1, including all 11,172 modern Hangul syllables.
@@ -190,7 +200,7 @@ To build, verify, and package the complete family for distribution, run:
 make PYTHON=.venv/bin/python distribution
 ```
 
-The resulting `dist/SNUJaha-0.2.0.zip` has a flat archive root containing the
+The resulting `dist/SNUJaha-0.2.1.zip` has a flat archive root containing the
 14 OTF files plus `LICENSE.txt`, `LICENSE-RIDIBatang.txt`, and
 `LICENSE-RobotoSerif.txt`. The package deliberately excludes specimens, source
 fonts, and project documentation. Archive entry order, timestamps, permissions,
@@ -348,7 +358,7 @@ GitHub Actions runs the unit tests, builds all 14 fonts from pinned sources,
 checks every font, runs the full weight and italic-clearance audits, verifies
 the flat ZIP layout, and uploads the ZIP as a 30-day workflow artifact on every
 push and pull request. A tag matching the project version exactly (for example,
-`v0.2.0`) publishes that same audited artifact as a GitHub Release using
+`v0.2.1`) publishes that same audited artifact as a GitHub Release using
 `RELEASE_NOTE.md`; a mismatched tag is rejected before the build.
 
 ## Sources and licensing

@@ -11,7 +11,7 @@ from typing import Iterator
 
 
 FAMILY_NAME = "SNU Jaha"
-VERSION = "0.2.0"
+VERSION = "0.2.1"
 VENDOR_ID = "HCHK"
 TARGET_UPM = 1000
 
@@ -442,7 +442,8 @@ def build(
         )
         with suppress_c_stderr(quiet):
             validation = base.validate()
-            base.generate(str(output), flags=("opentype",))
+            # Round only at final export for CFF printer compatibility.
+            base.generate(str(output), flags=("opentype", "round"))
     finally:
         base.close()
         transformed_latin.unlink(missing_ok=True)

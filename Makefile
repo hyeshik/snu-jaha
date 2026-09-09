@@ -473,6 +473,7 @@ extrabold-full-audit: regular-build bold-build extrabold-build
 		--output "$(EXTRABOLD_FULL_AUDIT)"
 
 distribution: build verify-all weight-range-audit extrabold-full-audit italic-guard-audit
+	$(PYTHON) -m unittest discover -s tests -p test_cff_print_coordinates.py
 	$(PYTHON) scripts/package_distribution.py \
 		--input-dir "$(DIST_DIR)" \
 		--output "$(PACKAGE_ZIP)"
