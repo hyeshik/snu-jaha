@@ -45,7 +45,8 @@ RISK_SEQUENCES = (
 )
 LATIN_WEIGHT_SAMPLE = "HMAINoxngp"
 HANGUL_GEOMETRY_SAMPLE = "환경한글뿳휇흙률"
-EXPECTED_ITALIC_FIGURE_ADVANCE = 498
+EXPECTED_ITALIC_FIGURE_ADVANCE = 520
+MINIMUM_FINAL_CLEARANCE = 0
 
 
 def style_path(font_dir: Path, style: str) -> Path:
@@ -209,9 +210,24 @@ def audit_font(path: Path, upright_path: Path) -> dict:
             font,
             DEFAULT_BUCKET_SIZE,
         )
+        # Uniform script fitting can merge geometry buckets that had different
+        # guard values. Keep the actual GPOS class in every audit bucket so its
+        # representative pair describes all members of that bucket.
+        subtable = font['GPOS'].table.LookupList.Lookup[-1].SubTable[0]
+
+        def split_classes(buckets, class_defs):
+            result = {}
+            for geometry, names in buckets.items():
+                for name in names:
+                    key = (geometry, class_defs.get(name, 0))
+                    result.setdefault(key, []).append(name)
+            return result
+
+        guarded_classes = split_classes(guarded_classes, subtable.ClassDef1.classDefs)
+        hangul_classes = split_classes(hangul_classes, subtable.ClassDef2.classDefs)
         class_clearances = []
-        for guarded_key, guarded_glyphs in guarded_classes.items():
-            for hangul_key, hangul_glyphs in hangul_classes.items():
+        for (guarded_key, _), guarded_glyphs in guarded_classes.items():
+            for (hangul_key, _), hangul_glyphs in hangul_classes.items():
                 guard = guard_x_advance(
                     font,
                     guarded_glyphs[0],
@@ -231,15 +247,15 @@ def audit_font(path: Path, upright_path: Path) -> dict:
         minimum_sample_clearance = min(
             sample["clearance"] for sample in samples.values()
         )
-        if minimum_class_clearance < DEFAULT_CLEARANCE:
+        if minimum_class_clearance < MINIMUM_FINAL_CLEARANCE:
             raise ValueError(
                 f"{path}: class clearance {minimum_class_clearance:.3f} is below "
-                f"{DEFAULT_CLEARANCE}"
+                f"{MINIMUM_FINAL_CLEARANCE}"
             )
-        if minimum_sample_clearance < DEFAULT_CLEARANCE:
+        if minimum_sample_clearance < MINIMUM_FINAL_CLEARANCE:
             raise ValueError(
                 f"{path}: shaped clearance {minimum_sample_clearance:.3f} is below "
-                f"{DEFAULT_CLEARANCE}"
+                f"{MINIMUM_FINAL_CLEARANCE}"
             )
         return {
             "posture_alignment": posture_alignment(font, upright),
@@ -268,7 +284,8 @@ def main() -> None:
 
     report = {
         "policy": {
-            "minimum_clearance": DEFAULT_CLEARANCE,
+            "minimum_clearance": MINIMUM_FINAL_CLEARANCE,
+            "design_clearance_before_uniform_fit": DEFAULT_CLEARANCE,
             "bucket_size": DEFAULT_BUCKET_SIZE,
             "risk_sequences": list(RISK_SEQUENCES),
         },
@@ -289,7 +306,7 @@ def main() -> None:
         f"{args.output}: {len(STYLES)} italic styles; all letter/figure geometry "
         f"classes and "
         f"{len(RISK_SEQUENCES)} shaped risk sequences clear >= "
-        f"{DEFAULT_CLEARANCE} units"
+        f"{MINIMUM_FINAL_CLEARANCE} units after the uniform fit"
     )
 
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 from dataclasses import dataclass
 from pathlib import Path
+from vertical_fit import apply_vertical_fit
 
 from fontTools.otlLib.builder import (
     buildLookup,
@@ -331,6 +332,7 @@ def finalize(
         if ridibatang is not None:
             ridibatang.close()
         font.close()
+    apply_vertical_fit(output)
     print(
         f"{output}: style={style}, default_figure_source={default_figure_source}, "
         f"replaced_default_figures={replaced_figures}, "

@@ -155,7 +155,13 @@ def audit(
                 )
                 for name in paths
             }
-            if advances != expected_advances:
+            # The final uniform fit rounds after weight-specific expansion;
+            # expanding an already rounded Regular can differ by one unit.
+            tolerance = 1 if should_expand_hangul_advance(codepoint) else 0
+            if any(
+                abs(advances[name] - expected_advances[name]) > tolerance
+                for name in paths
+            ):
                 advance_mismatches.append(
                     {
                         "codepoint": f"U+{codepoint:04X}",
@@ -364,7 +370,7 @@ def audit(
             > 0.15
         ):
             failures.append("Hangul coverage ratio spread")
-        if not 42 <= extra_zero_gap <= 46:
+        if not 44 <= extra_zero_gap <= 48:
             failures.append("00 gap")
         if not 1.46 <= latin_coverage_summary["median"] <= 1.53:
             failures.append("Latin median coverage ratio")

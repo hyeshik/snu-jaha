@@ -47,6 +47,14 @@ def raster_ink(font: ImageFont.FreeTypeFont, character: str) -> int:
     return int(np.asarray(mask, dtype=np.uint8).sum())
 
 
+def raster_weight_is_ordered(lighter_ink, heavier_ink, lighter_area, heavier_area):
+    # Equal-area fallback arrows can land at different subpixel positions after
+    # integer fitting. Allow one opaque pixel of antialiasing noise only when
+    # their vector areas are equal; actual weight changes remain strict.
+    tolerance = 255 if abs(lighter_area - heavier_area) <= 0.01 else 0
+    return lighter_ink <= heavier_ink + tolerance
+
+
 def zero_gap(font: TTFont) -> float:
     cmap = font.getBestCmap()
     glyph_name = cmap[ord("0")]
@@ -172,8 +180,14 @@ def audit(
                     }
                 )
             if not (
-                raster_areas["Thin"] <= raster_areas["Light"]
-                and raster_areas["Light"] <= raster_areas["Regular"]
+                raster_weight_is_ordered(
+                    raster_areas["Thin"], raster_areas["Light"],
+                    areas["Thin"], areas["Light"],
+                )
+                and raster_weight_is_ordered(
+                    raster_areas["Light"], raster_areas["Regular"],
+                    areas["Light"], areas["Regular"],
+                )
             ):
                 area_order_violations.append(
                     {

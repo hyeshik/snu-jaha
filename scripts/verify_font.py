@@ -5,11 +5,16 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from fontTools.misc.roundTools import otRound
 from fontTools.pens.boundsPen import BoundsPen
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.ttLib import TTFont
 
 from build_jaha import VERSION, font_revision
+from vertical_fit import VERTICAL_FIT
+
+LATIN_SCALE = VERTICAL_FIT["latin"]["scale"]
+LATIN_DY = VERTICAL_FIT["latin"]["dy"]
 
 
 EXPECTED_GSUB = {"frac", "liga", "lnum", "onum", "pnum", "tnum", "zero"}
@@ -314,7 +319,7 @@ def verify(path: Path) -> None:
                 style_name = "Regular"
         profile = STYLE_PROFILES[style_name]
         expected_fs_selection = (
-            (1 if italic else 0)
+            128 | (1 if italic else 0)
             | (32 if style_name == "Bold" else 0)
             | (64 if style_name == "Regular" and not italic else 0)
         )
@@ -340,11 +345,18 @@ def verify(path: Path) -> None:
             errors.append(f"macStyle must be {expected_mac_style}")
         if font["OS/2"].fsType != 0:
             errors.append("embedding must be unrestricted")
-        if font["OS/2"].sCapHeight != profile.cap_height:
-            errors.append(f"cap height must be {profile.cap_height}")
-        if font["OS/2"].sxHeight != profile.x_height:
-            errors.append(f"x-height must be {profile.x_height}")
+        cap_height = otRound(profile.cap_height * LATIN_SCALE + LATIN_DY)
+        x_height = otRound(profile.x_height * LATIN_SCALE + LATIN_DY)
+        if font["OS/2"].sCapHeight != cap_height:
+            errors.append(f"cap height must be {cap_height}")
+        if font["OS/2"].sxHeight != x_height:
+            errors.append(f"x-height must be {x_height}")
 
+        hhea, os2 = font['hhea'], font['OS/2']
+        if (hhea.ascent, hhea.descent, hhea.lineGap) != (952, -241, 0):
+            errors.append('hhea metrics must be 952/-241/0')
+        if (os2.sTypoAscender, os2.sTypoDescender, os2.sTypoLineGap) != (952, -241, 0):
+            errors.append('OS/2 typo metrics must be 952/-241/0')
         cmap = font.getBestCmap()
         hangul_count = sum(0xAC00 <= codepoint <= 0xD7A3 for codepoint in cmap)
         if hangul_count != 11172:
@@ -357,7 +369,8 @@ def verify(path: Path) -> None:
             if italic
             else profile.reference_advances
         )
-        for character, expected_advance in reference_advances.items():
+        for character, design_advance in reference_advances.items():
+            expected_advance = otRound(design_advance * LATIN_SCALE)
             glyph_name = cmap[ord(character)]
             actual_advance = font["hmtx"][glyph_name][0]
             if actual_advance != expected_advance:
@@ -370,6 +383,7 @@ def verify(path: Path) -> None:
             if italic
             else EXPECTED_DEFAULT_FIGURE_ADVANCE
         )
+        expected_figure_advance = otRound(expected_figure_advance * LATIN_SCALE)
         for character in "0123456789":
             glyph_name = cmap[ord(character)]
             actual_advance = font["hmtx"][glyph_name][0]
@@ -400,7 +414,12 @@ def verify(path: Path) -> None:
             pen = BoundsPen(glyph_set)
             glyph_set[glyph_name].draw(pen)
             actual_bounds = tuple(round(value, 3) for value in pen.bounds)
-            if actual_bounds != expected_bounds:
+            expected_bounds = tuple(
+                value * LATIN_SCALE + (LATIN_DY if index % 2 else 0)
+                for index, value in enumerate(expected_bounds)
+            )
+            # Control-point rounding can move a curve extremum by up to one unit.
+            if max(abs(a - b) for a, b in zip(actual_bounds, expected_bounds)) > 1.01:
                 errors.append(
                     f"{character} bounds are {actual_bounds}, "
                     f"expected {'Roboto Serif' if italic else 'RIDIBatang'} "
@@ -463,8 +482,7 @@ def verify(path: Path) -> None:
         for dash in "-–—":
             dash_name = cmap[ord(dash)]
             for figure, expected in EXPECTED_DASH_FIGURE_KERNING.items():
-                if italic:
-                    expected = 0
+                expected = 0 if italic else otRound(expected * LATIN_SCALE)
                 figure_name = cmap[ord(figure)]
                 actual = pair_x_advance(font, dash_name, figure_name)
                 if actual != expected:

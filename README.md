@@ -11,6 +11,30 @@ figures come from RIDIBatang for restrained academic number setting. Italic
 styles retain Roboto Serif's native italic figures so numbers and Latin text
 share one posture and rhythm.
 
+## Vertical sizing and alignment
+
+All main SNU Jaha fonts use the adopted macOS system-font fit. Family,
+PostScript, and file names retain `SNU Jaha` / `SNUJaha` without a
+`Mac` suffix. The final stage runs once after the existing design transforms,
+metadata, and italic collision guard. It applies these additional transforms
+at UPM 1000; positive Y moves ink upward:
+
+| Glyph group | Uniform X/Y scale | Y shift |
+|---|---:|---:|
+| Hangul and Jamo, including their GSUB alternates | 0.937366801 | +61.106322487 |
+| Latin and all remaining glyphs | 1.043479405 | +11.478273458 |
+
+Both axes use the same factor, preserving the approved glyph aspect ratios.
+Advances, kerning, mark anchors, and hint zones follow the corresponding scale.
+The final `hhea` and `OS/2` typo metrics are **952 / −241 / 0**
+(ascender / descender / line gap), with `USE_TYPO_METRICS` enabled. Windows
+clipping bounds include all ink; cap/x-height metadata follows the transformed
+outlines. Horizontal `BASE` entries use the Roman baseline at zero. Cmap,
+GSUB substitutions, style linking, and the existing release version are kept.
+
+`scripts/vertical_fit.py` contains the final fit and is called by the
+normal build. It does not depend on another SNU repository or study files.
+
 ## Printing compatibility
 
 Final OTF export uses FontForge's `round` flag to write integer CFF outline
@@ -22,6 +46,10 @@ the design transforms remain as specified. Built-font regression tests scan
 every glyph for fractional coordinates.
 
 ## Design decisions
+
+The geometry and spacing values in this section describe the design stage,
+before the final uniform fit above. Final default digit advances are 543 units
+upright and 520 units italic.
 
 - Korean base: RIDIBatang 1.0.1, including all 11,172 modern Hangul syllables.
 - Latin source: Roboto Serif v1.008 upright and native italic at a 14pt optical
@@ -51,7 +79,9 @@ every glyph for fractional coordinates.
 - Roboto Serif kerning values are scaled by 89.5% with the Latin outlines.
 - Italic Latin and figure terminals and upright Hangul are grouped by their
   measured right overhang and left sidebearing. A final `kern` lookup
-  guarantees at least 30 units of optical clearance for every class pair. Its
+  targets at least 30 design units of optical clearance for every class pair
+  before the final uniform fit. The final audit checks every resulting guard
+  class for collisions and reports its remaining clearance. Its
   input set starts from all encoded non-CJK letters and numbers and follows
   GSUB outputs, so `f` ligatures, numeral alternates, `T`, `K`, `V`, `W`, `Y`,
   and other potential overhangs are covered.
@@ -88,9 +118,10 @@ Korean, East Asian context glyphs, and the upright default figures receive the
 listed FontForge weight offset. Weighting is first recentered in the original
 cell. Bold and ExtraBold then widen only visible Hangul cells and distribute
 the added space equally on both sides. CJK punctuation remains fixed. Upright
-default figures finish in a common
-520-unit cell. Italic default figures come from the corresponding Roboto Serif
-instance and finish at 498 units after the Latin advance transform. Latin and
+default figures use a 520-unit design cell, which becomes 543 units in the
+final font. Italic default figures come from the corresponding Roboto Serif
+instance, use 498 units after the design-stage Latin advance transform, and
+finish at 520 units after the uniform fit. Latin and
 general punctuation use static upright or native italic Roboto Serif instances
 at `wdth=91` and the listed weight coordinates, then retain the Regular
 geometry transform.
