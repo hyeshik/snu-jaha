@@ -11,7 +11,7 @@ from typing import Iterator
 
 
 FAMILY_NAME = "SNU Jaha"
-VERSION = "0.2.1"
+VERSION = "0.2.2"
 VENDOR_ID = "HCHK"
 TARGET_UPM = 1000
 

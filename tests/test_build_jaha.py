@@ -24,7 +24,7 @@ class BuildJahaPolicyTests(unittest.TestCase):
     def test_family_identity(self) -> None:
         self.assertEqual(builder.FAMILY_NAME, "SNU Jaha")
         self.assertEqual(builder.POSTSCRIPT_NAME, "SNUJaha-Regular")
-        self.assertEqual(builder.VERSION, "0.2.1")
+        self.assertEqual(builder.VERSION, "0.2.2")
         self.assertEqual(builder.STYLE_SPECS["Regular"].weight_class, 400)
         self.assertEqual(builder.STYLE_SPECS["Thin"].weight_class, 100)
         self.assertEqual(builder.STYLE_SPECS["Light"].weight_class, 300)
@@ -54,7 +54,7 @@ class BuildJahaPolicyTests(unittest.TestCase):
         self.assertEqual(builder.STYLE_SPECS["Bold"].output_stylemap(True), 33)
 
     def test_version_maps_to_unique_opentype_revision(self) -> None:
-        self.assertEqual(builder.font_revision(), 0.201)
+        self.assertEqual(builder.font_revision(), 0.202)
         self.assertEqual(builder.font_revision("1.2.34"), 1.234)
         with self.assertRaises(ValueError):
             builder.font_revision("1.10.0")

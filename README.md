@@ -30,7 +30,7 @@ The final `hhea` and `OS/2` typo metrics are **952 / −241 / 0**
 (ascender / descender / line gap), with `USE_TYPO_METRICS` enabled. Windows
 clipping bounds include all ink; cap/x-height metadata follows the transformed
 outlines. Horizontal `BASE` entries use the Roman baseline at zero. Cmap,
-GSUB substitutions, style linking, and the existing release version are kept.
+GSUB substitutions and style linking are kept.
 
 `scripts/vertical_fit.py` contains the final fit and is called by the
 normal build. It does not depend on another SNU repository or study files.
@@ -231,7 +231,7 @@ To build, verify, and package the complete family for distribution, run:
 make PYTHON=.venv/bin/python distribution
 ```
 
-The resulting `dist/SNUJaha-0.2.1.zip` has a flat archive root containing the
+The resulting `dist/SNUJaha-0.2.2.zip` has a flat archive root containing the
 14 OTF files plus `LICENSE.txt`, `LICENSE-RIDIBatang.txt`, and
 `LICENSE-RobotoSerif.txt`. The package deliberately excludes specimens, source
 fonts, and project documentation. Archive entry order, timestamps, permissions,
@@ -389,7 +389,7 @@ GitHub Actions runs the unit tests, builds all 14 fonts from pinned sources,
 checks every font, runs the full weight and italic-clearance audits, verifies
 the flat ZIP layout, and uploads the ZIP as a 30-day workflow artifact on every
 push and pull request. A tag matching the project version exactly (for example,
-`v0.2.1`) publishes that same audited artifact as a GitHub Release using
+`v0.2.2`) publishes that same audited artifact as a GitHub Release using
 `RELEASE_NOTE.md`; a mismatched tag is rejected before the build.
 
 ## Sources and licensing
