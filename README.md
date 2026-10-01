@@ -192,6 +192,10 @@ Requirements:
 - Typst for optional specimens
 - `curl`, `sha256sum`, and `unzip`
 
+The final outline fit also imports fontTools from FontForge's embedded Python.
+On Ubuntu, install `fontforge python3-fonttools python3-venv` through `apt-get`
+before creating the virtual environment below.
+
 Run:
 
 ```sh
